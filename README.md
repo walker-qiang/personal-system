@@ -20,6 +20,7 @@
 - `personal-tools`：长期工具仓，计划迁入 `/Users/qiang.lilq/personal-system/personal-tools` 后继续作为独立 Git repo。
 
 更多状态见 [workspace.yaml](workspace.yaml)。
+建设进度见 [目标项目进度](docs/project-progress.md)。
 
 ## 顶层工具
 
@@ -32,6 +33,7 @@
 ## 设计文档
 
 - [文档索引](docs/README.md)
+- [目标项目进度](docs/project-progress.md)
 - [定位](docs/positioning.md)
 - [personal-assets 契约](docs/personal-assets-contract.md)
 - [AssetStore 协议](docs/assetstore-protocol.md)
