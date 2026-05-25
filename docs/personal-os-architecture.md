@@ -143,7 +143,7 @@ Responsibilities:
 - Knowledge pages: search, source browsing, ingest status, reports.
 - AI chat surface.
 - Sync/cache status indicators.
-- Responsive mobile web/PWA experience.
+- Desktop finance workflow first; responsive mobile web/PWA is deferred beyond the current V1 focus.
 
 Rules:
 

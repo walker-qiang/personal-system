@@ -28,7 +28,7 @@ Use these defaults unless real implementation friction proves otherwise.
 | Cache | Node-local SQLite + FTS first | Simple, fast, rebuildable |
 | Sync | Scheduled pull + write-time final sync check | Enough for single-user multi-node usage |
 | Cloud access | Tailscale first | Private single-user access without building account/auth infrastructure |
-| Mobile | Responsive web/PWA first | Mini program only after a real mobile-native need appears |
+| Mobile | Deferred for V1 | Do not spend current work on phone browser handling; revisit responsive web/PWA only after desktop finance workflow is stable |
 | Knowledge target name | `knowledge/` | Clearer long-term name than preserving `wiki/` as an architecture concept |
 | Compatibility | No historical compatibility constraint | Migrate intentionally after the new path works |
 

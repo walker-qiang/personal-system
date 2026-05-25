@@ -65,7 +65,7 @@ Multiple entry points can coexist, but they must share the same asset layer and 
 
 Do not start with a mini program.
 
-First validate mobile usage through a responsive web/PWA experience on the cloud node. Consider a mini program only if a strong mobile-native need appears, such as WeChat ecosystem capture, frequent phone-side snapshot entry, notifications, camera upload, or voice input.
+Do not spend the current V1 work on phone browser handling. Stabilize the desktop finance snapshot workflow first, then revisit responsive web/PWA only if real usage shows a mobile-side need. Consider a mini program only if a strong mobile-native need appears, such as WeChat ecosystem capture, frequent phone-side snapshot entry, notifications, camera upload, or voice input.
 
 ## Current Planning Decision
 
