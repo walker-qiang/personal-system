@@ -1,0 +1,58 @@
+schema_version: 1
+root: /Users/qiang.lilq/personal-system
+policy:
+  top_level_git_role: workspace-governance
+  submodule_policy: do_not_use_by_default
+  docs_language: zh-CN
+  runtime_state_tracked: false
+projects:
+  - name: personal-assets
+    path: personal-assets
+    git: independent
+    status: active
+    long_term: true
+    role: durable source of truth for finance facts and broader personal assets
+    primary_entry: Obsidian for broader knowledge; personal-os API for narrow finance snapshot writes
+  - name: personal-os
+    path: personal-os
+    git: independent
+    status: active
+    long_term: true
+    role: finance snapshot operating app for V1
+    scope: finance snapshot input, finance reads, cache/status checks, read-only finance Agent
+  - name: personal-tools
+    path: personal-tools
+    git: independent
+    status: planned-move
+    long_term: true
+    current_path: /Users/qiang.lilq/personal-tools
+    role: reusable personal tools, MCP servers, scripts, and automation
+  - name: workspace-docs
+    path: docs
+    git: top-level
+    status: active
+    long_term: true
+    role: system positioning, architecture, migration boundary, and roadmap
+  - name: workspace-tools
+    path: tools
+    git: top-level
+    status: active
+    long_term: false
+    role: migration and governance helper scripts
+archives:
+  - name: personal-finance
+    current_path: /Users/qiang.lilq/personal-finance
+    final_state: archive_after_finance_migration_is_stable
+    migrated_into: personal-os and personal-assets
+  - name: personal-web
+    current_path: /Users/qiang.lilq/personal-web
+    final_state: archive_after_ui_patterns_are_migrated
+    migrated_into: personal-os/apps/web
+  - name: personal-agent
+    current_path: /Users/qiang.lilq/personal-agent
+    final_state: archive_after_agent_runtime_lessons_are_migrated
+    migrated_into: personal-os/apps/agent
+  - name: obsidian-wiki
+    current_path: /Users/qiang.lilq/obsidian-wiki
+    final_state: keep_as_reference_and_obsidian_workflow_source_until_separate_content_migration_plan
+    migrated_into: personal-assets over time
