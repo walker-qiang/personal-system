@@ -31,7 +31,7 @@ projects:
     long_term: true
     role: finance snapshot operating app for V1
     scope: finance snapshot input, finance reads, cache/status checks, read-only finance Agent
-    next: harden finance snapshot input/correction UX, then doctor and mobile checks
+    next: exercise desktop finance snapshot workflow in routine use, then decide next hardening package or personal-tools migration plan
   - name: personal-tools
     path: personal-tools
     git: independent

@@ -18,7 +18,7 @@
 | --- | --- | --- | --- | --- | --- |
 | `personal-system` | 顶层 workspace / governance 仓，维护系统规则、规划、迁移台账和项目清单。 | `usable` | 已初始化顶层 Git 仓；已建立 `README.md`、`AGENTS.md`、`.gitignore`、`workspace.yaml`；已明确子项目独立 Git、不使用 submodule。 | 尚未配置 remote；项目进度需要持续维护；顶层历史规划文档仍有部分英文和较宽泛表述。 | 维护本文档和 `workspace.yaml`；需要远端备份时再配置 remote。 |
 | `personal-assets` | durable source of truth，保存 finance facts 和 broader personal assets。 | `usable` | 已迁移 finance facts；已有 finance 目录、schemas、targets、事实文件；仓库 clean；作为 `personal-os` cache rebuild 来源已跑通。 | broader knowledge 与 Obsidian 的最终映射仍需单独计划；非 finance 内容不由 `personal-os` V1 推动。 | 继续作为 finance durable source；后续单独规划 Obsidian 内容迁移或映射。 |
-| `personal-os` | V1 为投资快照操作应用：快照录入、修正、持仓读取、cache/status、只读 finance Agent。 | `usable` | 已完成 finance cache builder、legacy read parity、新 durable endpoints、snapshot create/correct/void、Web finance 页面、只读 Agent、`tools/dev` 和 smoke。 | 快照录入 UX、移动端可用性、blocked write 状态、doctor 检查还需打磨；admin / 管理页面保持现状。 | 做 finance snapshot 输入和修正 UX hardening，再做 `doctor` 和移动端检查。 |
+| `personal-os` | V1 为投资快照操作应用：快照录入、修正、持仓读取、cache/status、只读 finance Agent。 | `usable` | 已完成 finance cache builder、legacy read parity、新 durable endpoints、snapshot create/correct/void、Web finance 页面、只读 Agent、`tools/dev` 和 smoke；已补桌面端写入状态、doctor blockers、duplicate/dirty repo e2e 覆盖。 | 快照录入 UX 仍可按真实使用继续微调；commit failure 等写入后错误恢复文案还可继续细化；admin / 管理页面保持现状；手机浏览器处理暂不进入近期范围。 | 在桌面端日常使用中验证 finance snapshot workflow；后续再决定下一轮 hardening 或 `personal-tools` 迁移计划。 |
 | `personal-tools` | 长期工具仓，保存可复用个人工具、MCP servers、脚本和自动化。 | `planned` | 旧路径 `/Users/qiang.lilq/personal-tools` 已有可用工具和自动化经验。 | 尚未迁入 `/Users/qiang.lilq/personal-system/personal-tools`；哪些工具迁移、哪些保留引用需要筛选。 | 单独规划并迁移 `personal-tools` 到 workspace 下，保持独立 Git 仓。 |
 
 ## 迁移来源项目
