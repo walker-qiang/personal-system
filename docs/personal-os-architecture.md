@@ -199,9 +199,9 @@ Responsibilities:
 Initial permission ladder:
 
 1. Read-only chat over finance cache and knowledge search.
-2. Low-risk writes: create inbox/capture records.
+2. Low-risk writes: create source/capture records under `资料/`.
 3. Structured writes: create finance snapshots or transactions.
-4. Draft writes: create knowledge/report drafts.
+4. Draft writes: create `status: draft` knowledge or project notes.
 5. Durable knowledge writes only after explicit confirmation.
 
 Rules:
@@ -384,7 +384,7 @@ The high-level v1 defaults are fixed in `implementation-roadmap.md`. These detai
 4. Snapshot, transaction, correction, and void semantics.
 5. Schema versioning policy.
 6. Whether to generate Go/Python types from JSON Schema.
-7. Exact migration mapping from existing `wiki/` pages into target `knowledge/`.
+7. Exact migration mapping from existing `wiki/` pages into target `知识/`.
 
 ## Design Rules
 
