@@ -63,7 +63,7 @@ personal-assets/
 
 ## 资料到知识 Skill
 
-后续 `技能/资料到知识/` 应承接 `obsidian-wiki` 的 source-based ingest 经验，但使用本仓库的新边界：
+后续 `技能/ingest-source-to-knowledge/` 应承接 `obsidian-wiki` 的 source-based ingest 经验，但使用本仓库的新边界：
 
 1. 输入来自 `资料/**`，原始资料只读。
 2. 输出进入 `知识/领域`、`知识/概念` 或 `知识/实体`。
