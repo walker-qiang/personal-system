@@ -432,7 +432,7 @@ Minimum rules:
 
 - External authentication is required.
 - Cloud Git credential can access only `personal-assets`.
-- No secrets are committed.
+- Secrets may be committed since this is a fully private single-user system, but they should be placed in protected paths and excluded from external AI context.
 - The cloud node may sync the full private asset repository if the host and access layer are trusted.
 - Cloud node has its own `node_id`.
 - Cloud writes are committed as a distinct actor, e.g. `web-cloud`.

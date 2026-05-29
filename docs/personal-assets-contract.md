@@ -75,7 +75,8 @@ personal-assets/
 ## 写入规则
 
 - Git-backed text files 是长期事实。
-- 不提交 secrets、credentials、SQLite、cache、logs、`node_modules`、`dist` 或运行态文件。
+- 不提交 SQLite、cache、logs、`node_modules`、`dist` 或运行态文件。
+- secrets、credentials 等敏感内容按归属进入受保护目录（如 `财务/原始资料/`、`长乐道/` 下的专用路径），仍受 Git 跟踪。
 - 高风险或来源不足内容用 `status: draft`，不另建 `drafts/` 目录。
 - 快照、交易、采集记录、审计日志优先 append-only。
 - 财务 facts 必须能通过 `财务/模式/` 的 schema 和仓库级校验。
@@ -103,7 +104,7 @@ personal-assets/
 | L1 Public-ish | 低敏公开信息 | 可进入外部 AI |
 | L2 Personal | 一般个人信息 | 最小必要上下文 |
 | L3 Sensitive | 财务、身份、个人复盘等敏感信息 | 需要明确策略或确认 |
-| L4 Secret | 密钥、密码、token、恢复码 | 不进入 Git |
+| L4 Secret | 密钥、密码、token、恢复码 | 按归属进入受保护目录，仍受 Git 跟踪；外部 AI 调用时自动排除 |
 
 ## obsidian-wiki 映射方向
 

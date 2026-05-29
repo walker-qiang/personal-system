@@ -32,7 +32,7 @@ Use these defaults unless real implementation friction proves otherwise.
 | Knowledge target name | `知识/` | Clearer long-term name than preserving `wiki/` as an architecture concept |
 | Compatibility | No historical compatibility constraint | Migrate intentionally after the new path works |
 
-Secrets and credentials remain outside Git. Personal data may live in the private asset repository and sync across trusted nodes.
+Personal data and secrets may live in the private asset repository and sync across trusted nodes.
 
 ## What Not to Build First
 

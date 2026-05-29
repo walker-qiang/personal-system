@@ -59,7 +59,7 @@ Multiple entry points can coexist, but they must share the same asset layer and 
 7. AI writes to durable knowledge should be source-backed, auditable, and reversible.
 8. Cloud deployment is a node, not a new source of truth.
 9. Finance is the first structured module, not the center of the system.
-10. Personal data may live in the private asset repository; secrets and credentials still stay outside Git.
+10. Personal data and secrets may live in the private asset repository and sync across trusted nodes.
 
 ## Mobile / Mini Program Direction
 
