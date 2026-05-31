@@ -1,5 +1,5 @@
 schema_version: 1
-root: /Users/qiang.lilq/personal-system
+root: /Users/liqiang/code/personal-system
 policy:
   top_level_git_role: workspace-governance
   submodule_policy: do_not_use_by_default
@@ -31,37 +31,37 @@ projects:
     long_term: true
     role: finance snapshot operating app for V1
     scope: finance snapshot input, finance reads, cache/status checks, read-only finance Agent
-    next: exercise desktop finance snapshot workflow in routine use, then decide next hardening package or personal-tools migration plan
+    next: exercise desktop finance snapshot workflow in routine use, then decide next hardening package
   - name: personal-tools
     path: personal-tools
     git: independent
-    status: planned-move
-    completion: planned
+    status: active
+    completion: active
     long_term: true
-    current_path: /Users/qiang.lilq/personal-tools
+    current_path: /Users/liqiang/code/personal-system/personal-tools
     role: reusable personal tools, MCP servers, scripts, and automation
-    next: plan and move into personal-system while keeping an independent Git repo
+    next: keep in sync with Codex MCP config and launchd plists
 migration_sources:
-  - name: personal-finance
-    current_path: /Users/qiang.lilq/personal-finance
-    status: reference
-    final_state: archive_after_finance_migration_is_stable
-    migrated_into: personal-os and personal-assets
-  - name: personal-web
-    current_path: /Users/qiang.lilq/personal-web
-    status: reference
-    final_state: archive_after_ui_patterns_are_migrated
-    migrated_into: personal-os/apps/web
-  - name: personal-agent
-    current_path: /Users/qiang.lilq/personal-agent
-    status: reference
-    final_state: archive_after_agent_runtime_lessons_are_migrated
-    migrated_into: personal-os/apps/agent
   - name: obsidian-wiki
-    current_path: /Users/qiang.lilq/obsidian-wiki
+    current_path: /Users/liqiang/code/obsidian-wiki
     status: workflow-source
     final_state: keep_as_reference_and_obsidian_workflow_source_until_separate_content_migration_plan
     migrated_into: personal-assets over time
+  - name: personal-finance
+    current_path: archived (was /Users/liqiang/code/personal-finance)
+    status: archived
+    final_state: archived
+    migrated_into: personal-os and personal-assets
+  - name: personal-web
+    current_path: archived (was /Users/liqiang/code/personal-web)
+    status: archived
+    final_state: archived
+    migrated_into: personal-os/apps/web
+  - name: personal-agent
+    current_path: archived (was /Users/liqiang/code/personal-agent)
+    status: archived
+    final_state: archived
+    migrated_into: personal-os/apps/agent
 top_level_tracked_areas:
   - docs
   - tools
