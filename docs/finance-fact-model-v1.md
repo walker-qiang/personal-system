@@ -91,8 +91,8 @@ Corrections are full replacement facts of the same type.
 Rules:
 
 - Do not use partial patch records.
-- A corrected snapshot is still a complete snapshot record under `财务/快照/**`.
-- A corrected transaction is still a complete transaction record under `财务/交易/**`.
+- A corrected snapshot is still a complete snapshot record under `财富/快照/**`.
+- A corrected transaction is still a complete transaction record under `财富/交易/**`.
 - Use `correction_of` to link to the previous fact.
 - Use `correction_reason` to explain the correction.
 - Synced original facts should not be edited unless they are clearly unsynced local mistakes.
@@ -110,7 +110,7 @@ Rules:
 Recommended path:
 
 ```text
-财务/作废/YYYY/MM/YYYY-MM-DD-<target-id>-<void-id>.json
+财富/作废/YYYY/MM/YYYY-MM-DD-<target-id>-<void-id>.json
 ```
 
 ## Money

@@ -23,9 +23,9 @@ personal-assets/
       人工智能/
       工程/
       投资/
-      职业/
+      事业/
       自我/
-      健康/
+      身体/
       沟通/
       系统/
     实体/
@@ -33,7 +33,7 @@ personal-assets/
   项目/
   长乐道/
 
-  财务/
+  财富/
     资产/
     快照/
     交易/
@@ -60,8 +60,8 @@ personal-assets/
 - `项目/` 可按 `README.md`、`过程记录/`、`交付物/`、`归档/` 组织阶段性产物。
 - `长乐道/`：人工主导的个人记录、复盘和长期轨迹；AI 默认不改写原文。
 - `长乐道/` 不用 `草稿/`、`decisions/` 这类状态型目录；草稿状态通过 frontmatter 表达。
-- `财务/`：结构化财务 facts、schema、审计和报表；facts 由程序主导写入，人工只做校验和例外处理。
-- `财务/投研/`：承接研究、观察池和模板类投研产物，由 AI 和人工共同维护，但不等同于财务事实。
+- `财富/`：结构化财富 facts、schema、审计和报表；facts 由程序主导写入，人工只做校验和例外处理。
+- `财富/投研/`：承接研究、观察池和模板类投研产物，由 AI 和人工共同维护，但不等同于财富事实。
 - `技能/`：由人工定义、AI 协助迭代的可复用 workflow / skill。
 - `附件/`：Vault 级附件；新附件默认按 `YYYY-MM/` 归档。
 - `模板/`：由人工定义、AI 协助整理的 Obsidian 和 AI 写作模板。
@@ -75,24 +75,24 @@ personal-assets/
 3. 写入前先检索已有知识页，优先更新而不是重复新建。
 4. 每个知识页必须保留来源引用。
 5. 写入后校验 frontmatter、链接和来源字段。
-6. 不写 `长乐道/**` 或 `财务/**`，除非用户明确切换到对应 workflow。
+6. 不写 `长乐道/**` 或 `财富/**`，除非用户明确切换到对应 workflow。
 
 ## 写入规则
 
 - Git-backed text files 是长期事实。
 - 不提交 SQLite、cache、logs、`node_modules`、`dist` 或运行态文件。
-- secrets、credentials 等敏感内容按归属进入受保护目录（如 `财务/原始资料/`、`长乐道/` 下的专用路径），仍受 Git 跟踪。
+- secrets、credentials 等敏感内容按归属进入受保护目录（如 `财富/原始资料/`、`长乐道/` 下的专用路径），仍受 Git 跟踪。
 - 高风险或来源不足内容用 `status: draft`，不另建 `drafts/` 目录。
 - 快照、交易、采集记录、审计日志优先 append-only。
-- 财务 facts 必须能通过 `财务/模式/` 的 schema 和仓库级校验。
+- 财富 facts 必须能通过 `财富/模式/` 的 schema 和仓库级校验。
 - 产品/runtime 写入应通过受控接口，例如 `AssetStore`。
-- 敏感内容按归属进入 `长乐道/` 或 `财务/`；其他目录默认只放通用材料。
+- 敏感内容按归属进入 `长乐道/` 或 `财富/`；其他目录默认只放通用材料。
 - Obsidian 稳定配置可以提交；`.obsidian/workspace.json` 和 `workspace-mobile.json` 是本机状态，不提交。
 
-## 财务 facts
+## 财富结构化记录
 
 ```text
-财务/
+财富/
   资产/          asset master data
   快照/YYYY/MM/  point-in-time asset values
   交易/YYYY/MM/  transaction facts
@@ -118,6 +118,6 @@ personal-assets/
 | `obsidian-wiki/raw/` | `personal-assets/资料/` |
 | `obsidian-wiki/wiki/` | `personal-assets/知识/` |
 | `obsidian-wiki/skills/` | `personal-assets/技能/` |
-| `obsidian-wiki/finance/exports/` | 迁移为 `personal-assets/财务/` facts |
+| `obsidian-wiki/finance/exports/` | 迁移为 `personal-assets/财富/` facts |
 
 迁移不是机械搬运；以当前目录契约为准，必要时重新归类。

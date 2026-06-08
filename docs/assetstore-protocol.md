@@ -117,15 +117,15 @@ Recommended initial operation types:
 | Operation | Purpose | Allowed Target |
 |---|---|---|
 | `capture.source.create` | Captured source document | `资料/**` |
-| `knowledge.ingest` | Source-backed synthesis | `知识/**`, `财务/审计/**` when finance-related |
-| `finance.asset.upsert` | Create/update asset master data | `财务/资产/**` |
-| `finance.snapshot.create` | Append asset snapshot | `财务/快照/**` |
-| `finance.transaction.create` | Append transaction | `财务/交易/**` |
-| `finance.fact.void` | Void an invalid snapshot or transaction | `财务/作废/**` |
-| `finance.target.update` | Update allocation targets | `财务/targets.yaml` |
-| `report.create` | Create analysis/report output | `项目/**`, `财务/报表/**` |
+| `knowledge.ingest` | Source-backed synthesis | `知识/**`, `财富/审计/**` when finance-related |
+| `finance.asset.upsert` | Create/update asset master data | `财富/资产/**` |
+| `finance.snapshot.create` | Append asset snapshot | `财富/快照/**` |
+| `finance.transaction.create` | Append transaction | `财富/交易/**` |
+| `finance.fact.void` | Void an invalid snapshot or transaction | `财富/作废/**` |
+| `finance.target.update` | Update allocation targets | `财富/targets.yaml` |
+| `report.create` | Create analysis/report output | `项目/**`, `财富/报表/**` |
 | `skill.update` | Update reusable AI workflows | `技能/**` |
-| `vault.rule.update` | Update repository rules or schemas | `AGENTS.md`, `README.md`, `财务/模式/**` |
+| `vault.rule.update` | Update repository rules or schemas | `AGENTS.md`, `README.md`, `财富/模式/**` |
 
 Avoid generic "write file" operations in product surfaces. The operation type is the contract.
 
@@ -372,8 +372,8 @@ Example:
 operations:
   finance.snapshot.create:
     allow:
-      - 财务/快照/**
-      - 财务/审计/**
+      - 财富/快照/**
+      - 财富/审计/**
     deny:
       - "**/.env"
 ```
@@ -412,7 +412,7 @@ Initial cache types:
 
 | Cache | Built From | Used By |
 |---|---|---|
-| Finance SQLite | `财务/**` facts | Web tables, analytics, AI tools |
+| Finance SQLite | `财富/**` facts | Web tables, analytics, AI tools |
 | Wiki full-text index | `知识/**`, `技能/**` | Search and retrieval |
 | Attachment metadata | `附件/**` | Capture/preview UI |
 | Optional vector index | curated `知识/` and `资料/` subsets | Semantic retrieval |
@@ -505,7 +505,7 @@ Response:
   "operation": "finance.snapshot.create",
   "commit_sha": "abc1234",
   "files_written": [
-    "财务/快照/2026/05/2026-05-23-cmb-cash-snap_01HY.json"
+    "财富/快照/2026/05/2026-05-23-cmb-cash-snap_01HY.json"
   ],
   "cache": {
     "rebuilt": true,
@@ -526,7 +526,7 @@ Error response:
   "error_code": "SYNC_CONFLICT",
   "message": "Local and remote branches diverged while syncing personal-assets.",
   "conflicts": [
-    "财务/targets.yaml"
+    "财富/targets.yaml"
   ],
   "next_action": "Resolve the Git conflict manually, then retry."
 }

@@ -89,7 +89,7 @@ personal-assets/
     实体/
   项目/
   长乐道/
-  财务/
+  财富/
     资产/
     快照/
     交易/
@@ -279,7 +279,7 @@ Existing changed admin/management pages should keep their current behavior and l
 The next concrete package should be:
 
 1. Create the `personal-os` repository scaffold.
-2. Build a read-only finance cache builder from `personal-assets/财务/**` to SQLite.
+2. Build a read-only finance cache builder from `personal-assets/财富/**` to SQLite.
 3. Reproduce legacy read API parity for assets, snapshots, holdings, and bucket targets.
 4. Add doctor/status checks for asset repo path, source commit, and cache freshness.
 5. Keep existing admin/management pages unchanged.

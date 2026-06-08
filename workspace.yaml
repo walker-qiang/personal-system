@@ -1,5 +1,5 @@
 schema_version: 1
-root: /Users/liqiang/code/personal-system
+root: /Users/qiang.lilq/personal-system
 policy:
   top_level_git_role: workspace-governance
   submodule_policy: do_not_use_by_default
@@ -18,11 +18,11 @@ projects:
     path: personal-assets
     git: independent
     status: active
-    completion: usable
+    completion: stable
     long_term: true
     role: durable source of truth for finance facts and broader personal assets
     primary_entry: Obsidian for broader knowledge; personal-os API for narrow finance snapshot writes
-    next: keep finance facts as source of truth; plan broader Obsidian mapping separately
+    next: keep personal-assets as the only active asset directory; continue day-to-day knowledge refinement and historical doc cleanup
   - name: personal-os
     path: personal-os
     git: independent
@@ -38,27 +38,27 @@ projects:
     status: active
     completion: active
     long_term: true
-    current_path: /Users/liqiang/code/personal-system/personal-tools
+    current_path: /Users/qiang.lilq/personal-system/personal-tools
     role: reusable personal tools, MCP servers, scripts, and automation
     next: keep in sync with Codex MCP config and launchd plists
 migration_sources:
   - name: obsidian-wiki
-    current_path: /Users/liqiang/code/obsidian-wiki
-    status: workflow-source
-    final_state: keep_as_reference_and_obsidian_workflow_source_until_separate_content_migration_plan
-    migrated_into: personal-assets over time
+    current_path: not_found_in_current_workspace_snapshot (historical obsidian-wiki references remain in docs and migrated facts)
+    status: reference-only
+    final_state: migration_complete_reference_only
+    migrated_into: personal-assets
   - name: personal-finance
-    current_path: archived (was /Users/liqiang/code/personal-finance)
+    current_path: archived (historical path was /Users/liqiang/code/personal-finance)
     status: archived
     final_state: archived
     migrated_into: personal-os and personal-assets
   - name: personal-web
-    current_path: archived (was /Users/liqiang/code/personal-web)
+    current_path: archived (historical path was /Users/liqiang/code/personal-web)
     status: archived
     final_state: archived
     migrated_into: personal-os/apps/web
   - name: personal-agent
-    current_path: archived (was /Users/liqiang/code/personal-agent)
+    current_path: archived (historical path was /Users/liqiang/code/personal-agent)
     status: archived
     final_state: archived
     migrated_into: personal-os/apps/agent

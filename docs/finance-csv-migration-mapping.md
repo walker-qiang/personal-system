@@ -112,7 +112,7 @@ Legacy file:
 bucket_targets-2026-04-26.csv
 ```
 
-Target `财务/targets.yaml` should use:
+Target `财富/targets.yaml` should use:
 
 ```yaml
 schema_version: 1

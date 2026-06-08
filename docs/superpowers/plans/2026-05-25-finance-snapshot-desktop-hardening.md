@@ -6,7 +6,7 @@
 
 **Architecture:** Add a small shared `internal/systemstatus` package for repo/cache status and doctor blockers, reuse it from the API and CLI doctor, then render those blockers in the existing Vue single-page UI. Keep create/correct writes on the existing `AssetStore` path and keep `snapshot.void` out of the UI.
 
-**Tech Stack:** Go 1.25, Vue 3 + TypeScript + Naive UI, Playwright, Git-backed `personal-assets`, SQLite cache.
+**Tech Stack:** Go 1.26.4, Vue 3 + TypeScript + Naive UI, Playwright, Git-backed `personal-assets`, SQLite cache.
 
 **Status:** Completed on 2026-05-26. Verified with `/opt/homebrew/bin/go test ./...`, `npm run build`, Agent unit tests, and `bash tools/smoke/finance-web-e2e.sh`.
 
