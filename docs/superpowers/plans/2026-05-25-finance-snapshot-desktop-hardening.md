@@ -6,7 +6,9 @@
 
 **Architecture:** Add a small shared `internal/systemstatus` package for repo/cache status and doctor blockers, reuse it from the API and CLI doctor, then render those blockers in the existing Vue single-page UI. Keep create/correct writes on the existing `AssetStore` path and keep `snapshot.void` out of the UI.
 
-**Tech Stack:** Go 1.25, Vue 3 + TypeScript + Naive UI, Playwright, Git-backed `personal-assets`, SQLite cache.
+**Tech Stack:** Go 1.26.4, Vue 3 + TypeScript + Naive UI, Playwright, Git-backed `personal-assets`, SQLite cache.
+
+**Status:** Completed on 2026-05-26. Verified with `/opt/homebrew/bin/go test ./...`, `npm run build`, Agent unit tests, and `bash tools/smoke/finance-web-e2e.sh`.
 
 ---
 
@@ -38,7 +40,7 @@
 **Files:**
 - Create: `personal-os/internal/systemstatus/status.go`
 
-- [ ] **Step 1: Create status types and collector**
+- [x] **Step 1: Create status types and collector**
 
 ```go
 package systemstatus
@@ -68,7 +70,7 @@ type Status struct {
 }
 ```
 
-- [ ] **Step 2: Add blocker/report helpers**
+- [x] **Step 2: Add blocker/report helpers**
 
 ```go
 type Blocker struct {
@@ -91,7 +93,7 @@ func ReportFor(status Status) Report {
 }
 ```
 
-- [ ] **Step 3: Wire exact blocker codes**
+- [x] **Step 3: Wire exact blocker codes**
 
 Use these blocker codes only:
 
@@ -111,7 +113,7 @@ cache_stale
 - Modify: `personal-os/tools/doctor/main.go`
 - Test: `personal-os/apps/api/main_test.go`
 
-- [ ] **Step 1: Add API tests first**
+- [x] **Step 1: Add API tests first**
 
 Add tests named:
 
@@ -132,7 +134,7 @@ var resp struct {
 }
 ```
 
-- [ ] **Step 2: Run failing API tests**
+- [x] **Step 2: Run failing API tests**
 
 Run:
 
@@ -142,7 +144,7 @@ go test ./apps/api -run 'TestDoctorEndpointReports' -count=1
 
 Expected before implementation: compile failure or missing `blockers`.
 
-- [ ] **Step 3: Update API to use `systemstatus`**
+- [x] **Step 3: Update API to use `systemstatus`**
 
 Replace the local status implementation with:
 
@@ -156,11 +158,11 @@ func (a *API) doctor(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-- [ ] **Step 4: Update CLI doctor**
+- [x] **Step 4: Update CLI doctor**
 
 Make `tools/doctor/main.go` marshal `systemstatus.ReportFor(systemstatus.Collect(ctx, cfg))` and exit non-zero when `report.OK` is false.
 
-- [ ] **Step 5: Run API tests**
+- [x] **Step 5: Run API tests**
 
 Run:
 
@@ -176,7 +178,7 @@ Expected: PASS.
 - Modify: `personal-os/apps/web/src/App.vue`
 - Modify: `personal-os/apps/web/src/style.css`
 
-- [ ] **Step 1: Add blocker model in `App.vue`**
+- [x] **Step 1: Add blocker model in `App.vue`**
 
 Add:
 
@@ -190,19 +192,19 @@ interface WriteBlocker {
 }
 ```
 
-- [ ] **Step 2: Derive `writeBlockers`**
+- [x] **Step 2: Derive `writeBlockers`**
 
 Include blockers for repo missing, repo dirty, cache missing, cache error, cache stale, and duplicate snapshot. Duplicate blocker must use code `duplicate_snapshot_date`.
 
-- [ ] **Step 3: Render write status**
+- [x] **Step 3: Render write status**
 
 Add one `NAlert` in the snapshot form with `data-testid="write-status"` and list items with `data-testid="write-blocker-${blocker.code}"`.
 
-- [ ] **Step 4: Enrich runtime status card**
+- [x] **Step 4: Enrich runtime status card**
 
 Add `Cache commit`, `Cache fresh`, `Repo dirty`, and a compact blocker list to the existing status card.
 
-- [ ] **Step 5: Add CSS**
+- [x] **Step 5: Add CSS**
 
 Add classes:
 
@@ -221,7 +223,7 @@ Keep the desktop layout compact and do not add mobile-specific rules.
 **Files:**
 - Modify: `personal-os/apps/web/e2e/finance-snapshot.spec.ts`
 
-- [ ] **Step 1: Extend existing duplicate-date assertions**
+- [x] **Step 1: Extend existing duplicate-date assertions**
 
 After create succeeds, assert:
 
@@ -229,7 +231,7 @@ After create succeeds, assert:
 await expect(page.locator('[data-testid="write-blocker-duplicate_snapshot_date"]')).toContainText('已有该资产快照');
 ```
 
-- [ ] **Step 2: Add dirty repo assertion**
+- [x] **Step 2: Add dirty repo assertion**
 
 Create an untracked file in `assetsPath`, reload, and assert:
 
@@ -238,7 +240,7 @@ await expect(page.locator('[data-testid="write-blocker-asset_repo_dirty"]')).toC
 await expect(page.locator('[data-testid="snapshot-submit"]')).toBeDisabled();
 ```
 
-- [ ] **Step 3: Clean the dirty fixture**
+- [x] **Step 3: Clean the dirty fixture**
 
 Delete the untracked file at the end of the test so the fixture repo is not left dirty.
 
@@ -247,11 +249,11 @@ Delete the untracked file at the end of the test so the fixture repo is not left
 **Files:**
 - Modify: `personal-os/docs/api.md`
 
-- [ ] **Step 1: Document doctor blockers**
+- [x] **Step 1: Document doctor blockers**
 
 Update the `/api/system/doctor` section to mention `blockers` and the five blocker codes.
 
-- [ ] **Step 2: Run Go tests**
+- [x] **Step 2: Run Go tests**
 
 Run:
 
@@ -261,7 +263,7 @@ go test ./...
 
 Expected: PASS.
 
-- [ ] **Step 3: Run Web build**
+- [x] **Step 3: Run Web build**
 
 Run from `personal-os/apps/web`:
 
@@ -271,7 +273,7 @@ npm run build
 
 Expected: PASS.
 
-- [ ] **Step 4: Run Web smoke/e2e**
+- [x] **Step 4: Run Web smoke/e2e**
 
 Run from `personal-os`:
 

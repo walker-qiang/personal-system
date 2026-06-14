@@ -116,19 +116,16 @@ Recommended initial operation types:
 
 | Operation | Purpose | Allowed Target |
 |---|---|---|
-| `capture.inbox.create` | Quick note/link/text capture | `inbox/**` |
-| `capture.raw.create` | Captured source document | `raw/general/**`, `raw/sensitive/**` |
-| `knowledge.ingest` | Source-backed raw to knowledge synthesis | `knowledge/**`, `system/audit/**` |
-| `finance.asset.upsert` | Create/update asset master data | `finance/assets/**` |
-| `finance.snapshot.create` | Append asset snapshot | `finance/snapshots/**` |
-| `finance.transaction.create` | Append transaction | `finance/transactions/**` |
-| `finance.fact.void` | Void an invalid snapshot or transaction | `finance/voids/**` |
-| `finance.target.update` | Update allocation targets | `finance/targets.yaml` |
-| `report.create` | Create analysis/report output | `reports/**`, `finance/reports/**` |
-| `draft.create` | Create review-buffer content | `drafts/**` |
-| `draft.promote` | Promote reviewed draft into durable area | `drafts/**`, target allowlist by draft type |
-| `skill.update` | Update reusable AI workflows | `skills/**` |
-| `system.rule.update` | Update system rules/schemas | `system/rules/**`, `system/schemas/**` |
+| `capture.source.create` | Captured source document | `资料/**` |
+| `knowledge.ingest` | Source-backed synthesis | `知识/**`, `财富/审计/**` when finance-related |
+| `finance.asset.upsert` | Create/update asset master data | `财富/资产/**` |
+| `finance.snapshot.create` | Append asset snapshot | `财富/快照/**` |
+| `finance.transaction.create` | Append transaction | `财富/交易/**` |
+| `finance.fact.void` | Void an invalid snapshot or transaction | `财富/作废/**` |
+| `finance.target.update` | Update allocation targets | `财富/targets.yaml` |
+| `report.create` | Create analysis/report output | `项目/**`, `财富/报表/**` |
+| `skill.update` | Update reusable AI workflows | `技能/**` |
+| `vault.rule.update` | Update repository rules or schemas | `AGENTS.md`, `README.md`, `财富/模式/**` |
 
 Avoid generic "write file" operations in product surfaces. The operation type is the contract.
 
@@ -341,7 +338,7 @@ actor: codex
 node: work-mac
 request: req_01HY...
 sources:
-- raw/general/2026/05/example.md
+- 资料/文章/2026/05/example.md
 ```
 
 Avoid large mixed commits. One user action should normally produce one commit.
@@ -375,10 +372,10 @@ Example:
 operations:
   finance.snapshot.create:
     allow:
-      - finance/snapshots/**
-      - system/audit/**
+      - 财富/快照/**
+      - 财富/审计/**
     deny:
-      - system/secrets/**
+      - "**/.env"
 ```
 
 This should be enforced mechanically, not just documented.
@@ -415,10 +412,10 @@ Initial cache types:
 
 | Cache | Built From | Used By |
 |---|---|---|
-| Finance SQLite | `finance/**` facts | Web tables, analytics, AI tools |
-| Wiki full-text index | `knowledge/**`, selected `system/**`, `skills/**` | Search and retrieval |
-| Attachment metadata | `raw/assets/**` | Capture/preview UI |
-| Optional vector index | curated knowledge/raw subsets | Semantic retrieval |
+| Finance SQLite | `财富/**` facts | Web tables, analytics, AI tools |
+| Wiki full-text index | `知识/**`, `技能/**` | Search and retrieval |
+| Attachment metadata | `附件/**` | Capture/preview UI |
+| Optional vector index | curated `知识/` and `资料/` subsets | Semantic retrieval |
 
 Cache metadata should record:
 
@@ -435,7 +432,7 @@ Minimum rules:
 
 - External authentication is required.
 - Cloud Git credential can access only `personal-assets`.
-- No secrets are committed.
+- Secrets may be committed since this is a fully private single-user system, but they should be placed in protected paths and excluded from external AI context.
 - The cloud node may sync the full private asset repository if the host and access layer are trusted.
 - Cloud node has its own `node_id`.
 - Cloud writes are committed as a distinct actor, e.g. `web-cloud`.
@@ -464,7 +461,7 @@ Recommended actors:
 
 Rules:
 
-- AI cannot rewrite `raw/**`.
+- AI cannot rewrite `资料/**`.
 - AI durable knowledge writes should include source refs.
 - AI writes involving L3 source material require the privacy policy to allow the model path.
 - High-risk writes should create drafts or reports, not overwrite durable knowledge directly.
@@ -508,7 +505,7 @@ Response:
   "operation": "finance.snapshot.create",
   "commit_sha": "abc1234",
   "files_written": [
-    "finance/snapshots/2026/05/2026-05-23-cmb-cash-snap_01HY.json"
+    "财富/快照/2026/05/2026-05-23-cmb-cash-snap_01HY.json"
   ],
   "cache": {
     "rebuilt": true,
@@ -529,7 +526,7 @@ Error response:
   "error_code": "SYNC_CONFLICT",
   "message": "Local and remote branches diverged while syncing personal-assets.",
   "conflicts": [
-    "finance/targets.yaml"
+    "财富/targets.yaml"
   ],
   "next_action": "Resolve the Git conflict manually, then retry."
 }

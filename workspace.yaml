@@ -18,11 +18,11 @@ projects:
     path: personal-assets
     git: independent
     status: active
-    completion: usable
+    completion: stable
     long_term: true
     role: durable source of truth for finance facts and broader personal assets
     primary_entry: Obsidian for broader knowledge; personal-os API for narrow finance snapshot writes
-    next: keep finance facts as source of truth; plan broader Obsidian mapping separately
+    next: keep personal-assets as the only active asset directory; continue day-to-day knowledge refinement and historical doc cleanup
   - name: personal-os
     path: personal-os
     git: independent
@@ -31,37 +31,37 @@ projects:
     long_term: true
     role: finance snapshot operating app for V1
     scope: finance snapshot input, finance reads, cache/status checks, read-only finance Agent
-    next: exercise desktop finance snapshot workflow in routine use, then decide next hardening package or personal-tools migration plan
+    next: exercise desktop finance snapshot workflow in routine use, then decide next hardening package
   - name: personal-tools
     path: personal-tools
     git: independent
-    status: planned-move
-    completion: planned
+    status: active
+    completion: active
     long_term: true
-    current_path: /Users/qiang.lilq/personal-tools
+    current_path: /Users/qiang.lilq/personal-system/personal-tools
     role: reusable personal tools, MCP servers, scripts, and automation
-    next: plan and move into personal-system while keeping an independent Git repo
+    next: keep in sync with Codex MCP config and launchd plists
 migration_sources:
+  - name: obsidian-wiki
+    current_path: not_found_in_current_workspace_snapshot (historical obsidian-wiki references remain in docs and migrated facts)
+    status: reference-only
+    final_state: migration_complete_reference_only
+    migrated_into: personal-assets
   - name: personal-finance
-    current_path: /Users/qiang.lilq/personal-finance
-    status: reference
-    final_state: archive_after_finance_migration_is_stable
+    current_path: archived (historical path was /Users/liqiang/code/personal-finance)
+    status: archived
+    final_state: archived
     migrated_into: personal-os and personal-assets
   - name: personal-web
-    current_path: /Users/qiang.lilq/personal-web
-    status: reference
-    final_state: archive_after_ui_patterns_are_migrated
+    current_path: archived (historical path was /Users/liqiang/code/personal-web)
+    status: archived
+    final_state: archived
     migrated_into: personal-os/apps/web
   - name: personal-agent
-    current_path: /Users/qiang.lilq/personal-agent
-    status: reference
-    final_state: archive_after_agent_runtime_lessons_are_migrated
+    current_path: archived (historical path was /Users/liqiang/code/personal-agent)
+    status: archived
+    final_state: archived
     migrated_into: personal-os/apps/agent
-  - name: obsidian-wiki
-    current_path: /Users/qiang.lilq/obsidian-wiki
-    status: workflow-source
-    final_state: keep_as_reference_and_obsidian_workflow_source_until_separate_content_migration_plan
-    migrated_into: personal-assets over time
 top_level_tracked_areas:
   - docs
   - tools
