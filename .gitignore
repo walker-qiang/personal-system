@@ -1,7 +1,11 @@
 # 子项目独立 Git 仓，顶层 workspace 仓不跟踪它们。
+/personal-agent/
 /personal-assets/
 /personal-os/
 /personal-tools/
+
+# HTML 分享包（zip 重复品）
+.trae-html-share-packages/
 
 # 本地配置和密钥
 .env
