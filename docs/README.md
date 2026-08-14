@@ -14,5 +14,8 @@
 8. [Implementation Roadmap](implementation-roadmap.md)
 9. [Finance Fact Model V1](finance-fact-model-v1.md)
 10. [Finance CSV Migration Mapping](finance-csv-migration-mapping.md)
+11. [Personal Agent 独立 Runtime 详细设计](superpowers/specs/2026-08-13-personal-agent-runtime-design.md)
+12. [Personal Agent 独立 Runtime 文件级实施计划](superpowers/plans/2026-08-13-personal-agent-runtime-implementation.md)
+13. [Personal Agent Runtime 跨仓接入说明](superpowers/specs/2026-08-13-personal-agent-runtime-design.md)
 
 迁移边界约束 V1 实现：当前 `personal-os` 是投资快照操作应用；更广义的 `personal-assets` knowledge 输入仍然以 Obsidian 为主。

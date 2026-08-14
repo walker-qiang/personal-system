@@ -29,9 +29,18 @@ projects:
     status: active
     completion: usable
     long_term: true
-    role: finance snapshot operating app for V1
-    scope: finance snapshot input, finance reads, cache/status checks, read-only finance Agent
-    next: exercise desktop finance snapshot workflow in routine use, then decide next hardening package
+    role: finance snapshot operating app and product/API entrypoint for the independent Agent
+    scope: finance snapshot input, finance reads, cache/status checks, Agent HTTP/SSE proxy
+    next: exercise desktop finance snapshot workflow and managed personal-agent integration
+  - name: personal-agent
+    path: personal-agent
+    git: independent
+    status: active
+    completion: usable
+    long_term: true
+    role: independent Python Agent Runtime and chat/tool service; personal-os consumes it over HTTP/SSE
+    scope: model/tool loop, Runtime operations, approvals, sessions, traces, and Agent application workflows
+    next: observe runtime rollout, add provider/recovery hardening, keep legacy paths available during migration
   - name: personal-tools
     path: personal-tools
     git: independent
@@ -57,11 +66,6 @@ migration_sources:
     status: archived
     final_state: archived
     migrated_into: personal-os/apps/web
-  - name: personal-agent
-    current_path: archived (historical path was /Users/liqiang/code/personal-agent)
-    status: archived
-    final_state: archived
-    migrated_into: personal-os/apps/agent
 top_level_tracked_areas:
   - docs
   - tools

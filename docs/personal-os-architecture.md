@@ -6,7 +6,9 @@
 
 It is a product boundary, not a single-language or single-process mandate. Its job is to provide the website, structured APIs, AI chat/runtime, cache builders, sync tooling, diagnostics, and deployment shape around the private Git-backed asset repository.
 
-`personal-os` owns runtime behavior. `personal-assets` owns long-term truth.
+`personal-os` owns the product/API boundary and finance operating workflows.
+The independent `personal-agent` owns Agent Runtime behavior. `personal-assets`
+owns long-term truth.
 
 ## Positioning
 
@@ -43,7 +45,7 @@ personal-os/
   apps/
     web/                    # Browser UI, responsive/PWA-ready
     api/                    # HTTP API, AssetStore service, cache query API
-    agent/                  # Web Agent runtime and model/tool orchestration
+    agent/                  # legacy-only compatibility Agent (not the default runtime)
 
   packages/
     schemas/                # Shared JSON Schema, OpenAPI, generated DTOs
@@ -97,7 +99,7 @@ Browser
       -> AssetStore
       -> local caches
       -> personal-assets checkout
-  -> agent service/runtime
+  -> independent personal-agent service/runtime
       -> tools through api/cache/AssetStore
 ```
 
@@ -105,7 +107,7 @@ Local development may run three processes:
 
 - `web`: frontend dev server.
 - `api`: structured API + AssetStore service + cache query API.
-- `agent`: AI runtime.
+- `agent`: independent `personal-agent` runtime; `apps/agent` is only an explicit legacy fallback.
 
 A single `personal-os dev` command should start them all.
 
@@ -185,7 +187,7 @@ Recommended endpoint groups:
 
 The API can call the agent runtime internally or proxy to a separate `apps/agent` process.
 
-### `apps/agent`
+### Independent `personal-agent`
 
 Responsibilities:
 
@@ -195,6 +197,17 @@ Responsibilities:
 - Model provider adapters.
 - Read-heavy finance and knowledge Q&A.
 - Controlled writes through API/AssetStore only.
+
+`personal-os` does not import Runtime Core or read Runtime SQLite. It proxies
+HTTP/SSE requests, including approval confirmation, and forwards the authenticated
+owner identity. Local `tools/dev` supports `managed`, `external`, and explicit
+`legacy` Agent modes; managed is the default.
+
+### `apps/agent` legacy compatibility
+
+The old in-repository Agent remains available for a short-term fallback only.
+It is not the default process and is not a second Runtime implementation to be
+kept behaviorally in lockstep with the independent service.
 
 Initial permission ladder:
 
