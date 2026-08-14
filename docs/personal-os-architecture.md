@@ -1,5 +1,13 @@
 # personal-os Architecture
 
+> 文档状态：早期/V1 架构参考
+>
+> 最新全局架构：[personal-system 最新设计](personal-system-design.md)
+>
+> 当前实现范围：[personal-os V1 迁移边界](../personal-os/docs/migration-boundary.md)
+
+本文保留早期技术选择、迁移思路和 `personal-os` 内部职责说明。若其中的仓库定位、客户端方向或 Agent 边界与当前实现冲突，以最新全局架构和 V1 迁移边界为准。
+
 ## Purpose
 
 `personal-os` is the local/cloud application for operating `personal-assets`.

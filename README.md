@@ -17,27 +17,21 @@
 
 - [personal-assets](personal-assets/)：长期数据与知识资产仓，独立 Git repo。
 - [personal-os](personal-os/)：投资快照应用，独立 Git repo。
-- `personal-tools`：长期工具仓，计划迁入 `/Users/qiang.lilq/personal-system/personal-tools` 后继续作为独立 Git repo。
+- [personal-agent](personal-agent/)：独立 Python Agent Runtime 和应用服务，独立 Git repo。
+- [personal-tools](personal-tools/)：可复用工具、MCP server、脚本和自动化，独立 Git repo。
 
 更多状态见 [workspace.yaml](workspace.yaml)。
 建设进度见 [目标项目进度](docs/project-progress.md)。
 
-## 顶层工具
-
-- [finance_csv_migration_check.py](tools/finance_csv_migration_check.py)：legacy finance CSV 迁移前检查。
-- [migrate_finance_csv.py](tools/migrate_finance_csv.py)：将 legacy CSV exports 迁移到 `personal-assets` finance facts。
-- [finance_migration_parity_check.py](tools/finance_migration_parity_check.py)：迁移后与 legacy holdings / snapshots 做 parity check。
-
-这些工具属于迁移和治理辅助，不是 `personal-os` 的长期运行入口。
-
 ## 设计文档
 
 - [文档索引](docs/README.md)
+- [personal-system 最新设计](docs/personal-system-design.md)
 - [目标项目进度](docs/project-progress.md)
 - [定位](docs/positioning.md)
 - [personal-assets 契约](docs/personal-assets-contract.md)
 - [AssetStore 协议](docs/assetstore-protocol.md)
-- [personal-os 架构](docs/personal-os-architecture.md)
+- [personal-os 早期/V1 架构参考](docs/personal-os-architecture.md)
 - [实施路线图](docs/implementation-roadmap.md)
 - [Finance Fact Model V1](docs/finance-fact-model-v1.md)
 - [Finance CSV 迁移映射](docs/finance-csv-migration-mapping.md)
