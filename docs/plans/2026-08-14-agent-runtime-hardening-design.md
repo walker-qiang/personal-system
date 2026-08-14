@@ -126,3 +126,26 @@ Runtime Core 内只保留一个工具执行入口：
 - `go test ./...`、Swift debug/release build 和本地 Mac App bundle 构建通过；ChatGPT bundled Codex 路径已确认可执行。
 
 默认模式继续保持 `legacy`。Runtime 已具备观察条件，但默认值切换仍应作为独立变更，在 App 重启使用新 bundle 并完成一段真实使用观察后决定。
+
+## 10. 后续 Runtime 演进边界
+
+本专项设计记录的是 Runtime correctness 加固，不把后续能力混入本次验收。结合全局架构基线，后续 Runtime 演进遵守以下边界：
+
+- Debug Trace 只用于当前运行期间的诊断展示，默认不进入 SQLite 长期数据，也不写入 Vault；需要保留的仍是 operation、approval、effect 和工具结果摘要等可审计事件；
+- `AgentMode / Preset` 是 Runtime 之上的能力、权限、上下文和输出策略，不是新的 Agent 实现；
+- 初始只规划 `read_only` 与受审批保护的 `writeback`，不因增加模式而扩大 Agent 的自主写入权限；
+- `MATRIX_RUNTIME_MODE=legacy/shadow/runtime` 仍表示执行引擎兼容模式，与面向用户的 `AgentMode` 分离；
+- 以上能力不得改变 LangGraph Adapter、Runtime Core、personal-os 和 personal-assets 的单向依赖边界。
+
+## 11. 第一批实现记录（2026-08-14）
+
+已在 `personal-agent` 落地最小可用 contract：
+
+- `RunHandle.debug_trace()` 提供当前 operation 的脱敏内存诊断；默认关闭，`clear_debug_trace()` 可主动释放；
+- Runtime 记录 model request/response、tool request/result、approval 和 error 轨迹，但不把这些 DebugTrace 写入 SQLite；
+- 应用层 `AgentMode/Preset` 解析为 Runtime `ExecutionPolicy`，Runtime 不导入 preset catalog；
+- `ToolSpec.side_effect` 为未来 Writeback 工具提供明确能力标记；`read_only` 拦截它，`writeback` 强制 approval；
+- HTTP `/api/chat` 和 GET SSE 增加可选 `agent_mode`、`preset`、`debug_trace`，Web 已提供默认关闭的 Debug 开关；未传时维持默认 `read_only/default` 且不采集调试信息；
+- 当前已注册工具没有开放 durable Vault 写入，因此本次不会扩大实际写权限。
+
+参考 DeepSeek Harness 的会话元数据、结构化事件和 capability seam 设计，但未引入 Cordis、TypeScript runtime 或其持久化实现。

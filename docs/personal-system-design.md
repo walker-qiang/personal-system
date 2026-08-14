@@ -271,6 +271,17 @@ Agent Runtime SQLite 保存：
 
 这类状态不能简单由 Vault 重建，因此需要事务、版本检查、effect journal 和恢复策略；operation 完成后，其中有长期价值的结果仍需通过 Writeback 写回 Vault。
 
+#### 7.3.1 Durable Runtime Events 与 Ephemeral Debug Trace
+
+Runtime 的恢复和审计信息可以进入 SQLite，但调试信息分为两层：
+
+- **Durable Runtime Events**：operation 状态变化、审批、effect intent、工具调用及结果摘要等，服务于恢复、幂等和审计；
+- **Ephemeral Debug Trace**：调试期间临时展示的详细模型上下文、上下文注入、Adapter 诊断和模型提供的推理摘要。
+
+Ephemeral Debug Trace 默认只在当前运行期间通过 App、SSE 或开发者日志展示，不进入长期数据库，也不写入 Vault。调试结束后可以销毁或按短 TTL 过期。Trace 必须做凭据、Token、个人隐私和工具返回值的必要脱敏。
+
+“原始隐式思维链”不是系统必须依赖的持久化对象；模型或 Provider 不提供时，Runtime 只展示结构化推理摘要、执行决策和工具轨迹。
+
 ### 7.4 Ephemeral State
 
 日志、临时上传、模型缓存、构建产物、进程 PID 和前端临时状态不进入任何 Git 仓库。
@@ -472,6 +483,8 @@ Runtime 不理解业务 DAG；Adapter 把 LangGraph step 映射为独立 `RunReq
 
 默认模式仍是 `legacy`。切换默认值必须经过独立观察和发布决策，不能因为 Runtime 已存在就自动启用。
 
+这里的 `legacy`、`shadow` 和 `runtime` 是执行引擎兼容模式，不等同于面向用户的 `AgentMode`；后者用于声明一次任务允许使用的能力、权限和输出策略。
+
 ### 11.3 Skill 边界
 
 Skill 是 executable contract，而不是 Prompt 收藏。长期 manifest 至少需要：
@@ -488,6 +501,25 @@ Risk / Confirmation Policy
 ```
 
 当前 Skills 已能被 Agent 加载和执行，但通用的路径化写入授权与 Writeback enforcement 仍是目标能力。
+
+### 11.4 AgentMode 与 Preset
+
+`AgentMode` 是同一个 Agent Runtime 上的能力、权限、上下文和输出策略组合，不是另一套 Agent 实现，也不改变 Runtime Core 的依赖方向。它至少可以约束：
+
+- 可用的 Model、Tool、Skill 和 Adapter；
+- 是否允许外部副作用及其确认策略；
+- 上下文范围、预算、超时和重试策略；
+- 输出结构和引用要求；
+- 是否开启临时 Debug Trace。
+
+`Preset` 是面向用户的命名配置，例如“投资研究”“快速记录”或“每日回顾”。它可以基于一个 `AgentMode` 调整模型、工具和输出参数，但不能绕过 Runtime、Vault 或 Writeback 的安全边界。
+
+初始只定义两个稳定模式：
+
+- `read_only`：默认模式，只允许检索、读取、分析和生成草稿，不允许直接写入 Vault；
+- `writeback`：允许生成写入计划，但必须经过变更预览、用户确认、WritebackService 校验和审计后才能执行。
+
+`analysis`、`capture` 和 `scheduled` 等模式先作为配置差异保留，待真实使用场景稳定后再抽成正式 Preset。`AgentMode` 解决的是能力和权限收敛问题，不是多用户隔离，也不是把所有业务规则搬进 Agent Runtime。
 
 ## 12. App 信息架构
 
@@ -527,6 +559,7 @@ Spaces
 - 凭据和私密正文默认不展开；
 - 外部模型不接收整个 Vault；
 - Agent 工具和 Skill 使用明确权限；
+- Debug Trace 默认临时、短期、脱敏，不作为个人长期记忆；
 - durable 写入可审计、可逆；
 - 高风险操作必须确认；
 - App、API 和 Agent 之间保留 owner identity；
@@ -546,6 +579,8 @@ Spaces
 | Web | 冻结 fallback | 兼容、调试和 E2E，不作为主产品入口 |
 | Independent Agent service | 已可用 | HTTP/SSE 接入 `personal-os` |
 | Independent Runtime | 已实现、观察中 | 默认仍为 legacy |
+| Ephemeral Debug Trace | 基础能力已实现 | 调试期间临时展示，不进入长期持久化；Web 已支持显式开关 |
+| AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；受控写回工具仍未开放 |
 | Agent durable write | 未开放 | 当前保持只读或通过已有窄 API |
 | Generic Semantic Projection | 未形成系统边界 | Agent 内有 RAG/Graph 能力，但不是 canonical projection |
 | New / Changed engine | 未实现 | 当前 Today 不代表该能力 |
@@ -616,6 +651,8 @@ Mac 可以启动 API 和 Agent，但进程生命周期、日志消费、退出�
 11. 受控的 Agent durable write 和 scheduled run。
 
 Agent Runtime 基础已经提前完成，因此近期重点不是继续扩大 Agent 自主权，而是补齐它上方的业务边界和下方的安全写回接口。
+
+Agent Runtime 内部已补齐 Ephemeral Debug Trace 与基础 `AgentMode`/`Preset` contract；后续只在其上增强 UI 展示和受控 WritebackService，不改变 Vault 的事实源地位，也不改变 LangGraph Adapter 与 Runtime Core 的边界。
 
 ## 17. 推荐服务边界
 
