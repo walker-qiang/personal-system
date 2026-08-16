@@ -1,6 +1,6 @@
 # Personal Agent 独立 Runtime 文件级实施计划
 
-> 状态：已实施 WP1-WP6；未提交 Git，保留 legacy 回退
+> 状态：已实施 WP1-WP6 并提交；继续保留 legacy 回退
 >
 > 日期：2026-08-13
 >

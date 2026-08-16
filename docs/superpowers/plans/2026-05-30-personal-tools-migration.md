@@ -1,6 +1,6 @@
 # personal-tools 迁移计划
 
-> **状态**: 规划中  
+> **状态**: 已完成；本文保留为迁移历史记录
 > **目标**: 将 `/Users/liqiang/code/personal-tools` 迁入 `/Users/liqiang/code/personal-system/personal-tools`，保持独立 Git 仓，不改变 remote。
 
 ## 1. 现状分析
@@ -234,4 +234,4 @@ personal-system/
 
 ---
 
-*计划版本: 2026-05-30 · 待用户审阅确认*
+*计划版本: 2026-05-30 · 迁移已完成；本文保留为历史计划记录*
