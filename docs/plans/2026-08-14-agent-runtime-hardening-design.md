@@ -111,7 +111,7 @@ Runtime Core 内只保留一个工具执行入口：
 - Mac Swift build 通过，启动命令能解析可执行的 `CODEX_BIN`；
 - 既有 Runtime/编排/API、Go 全量测试和 managed/legacy smoke 无回归。
 
-本文记录的是切换前的 hardening 设计；2026-08-16 已完成真实观察和顶层 legacy 清理，`MATRIX_RUNTIME_MODE` 已移除。发布回退通过版本回退并重启。
+本文记录的是切换前的 hardening 设计；2026-08-16 已完成真实观察和顶层 legacy 清理，`MATRIX_RUNTIME_MODE` 已移除。后续阶段补充了 Agent-as-Tool Runtime 迁移、模型重试失败收尾保护和 operation timeout；发布回退通过版本回退并重启。
 
 ## 9. 实施与验收结果
 

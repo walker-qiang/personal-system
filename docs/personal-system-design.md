@@ -269,6 +269,8 @@ Agent Runtime SQLite 保存：
 
 它是运行中 Agent operation 的权威恢复状态，但不是个人知识或 finance facts 的事实源。
 
+当前建设阶段，Runtime SQLite 中的 operation、event、approval 和 effect 视为可丢弃运行态。Runtime schema 变化允许重建 Runtime 自有表，不在代码中堆积历史运行态兼容逻辑；这不影响 `personal-assets`。
+
 这类状态不能简单由 Vault 重建，因此需要事务、版本检查、effect journal 和恢复策略；operation 完成后，其中有长期价值的结果仍需通过 Writeback 写回 Vault。
 
 #### 7.3.1 Durable Runtime Events 与 Ephemeral Debug Trace
@@ -580,12 +582,12 @@ Spaces
 | Independent Agent service | 已可用 | HTTP/SSE 接入 `personal-os` |
 | Independent Runtime | 已实现、已完成真实观察和顶层 legacy 清理 | 顶层执行固定 Runtime；旧消息/分支读取兼容保留 |
 | Ephemeral Debug Trace | 基础能力已实现 | 调试期间临时展示，不进入长期持久化；Web 已支持显式开关 |
-| AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；受控写回工具仍未开放 |
-| Agent durable write | 未开放 | 当前保持只读或通过已有窄 API |
+| AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；Runtime 只执行应用层解析后的策略 |
+| Agent durable write | 受控开放 | 当前仅开放 `finance.snapshot.create` 的 plan → approval → execute 链路；不等于开放任意 Vault 写入 |
 | Generic Semantic Projection | 未形成系统边界 | Agent 内有 RAG/Graph 能力，但不是 canonical projection |
 | New / Changed engine | 未实现 | 当前 Today 不代表该能力 |
 | Generic Decision Service | 未实现 | 有投研和 Decision Skill 资产，但无通用服务 |
-| Generic Writeback Service | 未实现 | finance AssetStore 写入可作为参考 |
+| Generic Writeback Service | 未实现 | 继续保持 finance 专用窄边界，通用 Vault 写回需另行设计和验收 |
 | Cloud node / mobile | 延后 | 不属于当前 V1 |
 
 ## 15. 当前架构与长期目标的主要差距
