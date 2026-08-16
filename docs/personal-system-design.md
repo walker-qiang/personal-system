@@ -479,11 +479,11 @@ Runtime 不理解业务 DAG；Adapter 把 LangGraph step 映射为独立 `RunReq
 - DAG 声明依赖结果注入；
 - SSE 正常完成与客户端取消语义；
 - owner 隔离；
-- legacy、shadow、runtime 模式。
+   - Runtime 固定主路径；历史 legacy/shadow 仅保留在迁移记录中。
 
-默认模式已切换为 `runtime`，并完成 DeepSeek + 真实 finance smoke 验收；`legacy` 仍可通过环境变量显式回退。
+已完成普通对话、Deep Research 文本/图片、DeepSeek、SQLite 持久化和服务重启恢复验收。`MATRIX_RUNTIME_MODE` 已移除；发布回退通过 Git/deployment 版本回退并重启。
 
-这里的 `legacy`、`shadow` 和 `runtime` 是执行引擎兼容模式，不等同于面向用户的 `AgentMode`；后者用于声明一次任务允许使用的能力、权限和输出策略。
+`AgentMode` 与 `Preset` 仍是面向用户的能力、权限和输出策略，不是执行引擎切换开关。
 
 ### 11.3 Skill 边界
 
@@ -578,7 +578,7 @@ Spaces
 | macOS App | 已可用 | 当前主入口，聚焦投资和个人助理 |
 | Web | 冻结 fallback | 兼容、调试和 E2E，不作为主产品入口 |
 | Independent Agent service | 已可用 | HTTP/SSE 接入 `personal-os` |
-| Independent Runtime | 已实现、已完成真实观察 | 默认 runtime，legacy 可回退 |
+| Independent Runtime | 已实现、已完成真实观察和顶层 legacy 清理 | 顶层执行固定 Runtime；旧消息/分支读取兼容保留 |
 | Ephemeral Debug Trace | 基础能力已实现 | 调试期间临时展示，不进入长期持久化；Web 已支持显式开关 |
 | AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；受控写回工具仍未开放 |
 | Agent durable write | 未开放 | 当前保持只读或通过已有窄 API |
@@ -631,7 +631,7 @@ Mac 可以启动 API 和 Agent，但进程生命周期、日志消费、退出�
 1. 继续真实使用 finance snapshot workflow；
 2. 完善写入失败、dirty repo、stale cache 和 commit failure 体验；
 3. 加固 doctor、managed process lifecycle 和 App 发布；
-4. 观察 Runtime，保留 legacy 回退；
+4. 继续观察 Runtime，发布回退通过版本回退完成；
 5. 保持 API、Agent 和 Web fallback 契约稳定。
 
 ### Track B：长期 Intelligence 基础

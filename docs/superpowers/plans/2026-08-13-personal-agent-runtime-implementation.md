@@ -1,10 +1,16 @@
 # Personal Agent 独立 Runtime 文件级实施计划
 
-> 状态：已实施 WP1-WP6 并提交；继续保留 legacy 回退
+> 状态：已实施 WP1-WP6，并完成顶层 legacy 清理；当前顶层执行固定走 Runtime
+>
+> 2026-08-16 增补：普通对话、Deep Research 文本/图片、DeepSeek、SQLite 持久化和重启恢复已真实验收；旧消息树/分支仅保留读取兼容，Agent-as-Tool 的嵌套 ReAct 仍保留。
 >
 > 日期：2026-08-13
 >
 > 前置设计：[Personal Agent 独立 Runtime 详细设计](../specs/2026-08-13-personal-agent-runtime-design.md)
+
+> 说明：本文保留 WP1-WP6 的历史实施记录。记录中的 `legacy/shadow`、
+> `MATRIX_RUNTIME_MODE` 和旧回退方法描述仅代表当时的迁移阶段，不是当前运行契约；
+> 当前契约以文末“阶段 E”和第 12-14 节为准。
 >
 > 实施范围：`personal-agent`（WP1-WP5）、`personal-os` 与 `personal-system` 治理文档（WP6）
 
@@ -17,9 +23,9 @@
 1. 先在独立 `personal-agent` 内完成 Runtime，再调整 `personal-os` 的启动和治理边界。
 2. `runtime.domain`、`runtime.ports`、`runtime.core` 严格单向依赖，不得导入 LangGraph、FastAPI、ChatService、Commander、AgentRegistry、具体 Domain Agent 或 `personal-os`。
 3. 每个 WP 都保留可用回退点；数据库迁移只向前增加，代码回滚不删除新表。
-4. `MATRIX_RUNTIME_MODE` 在 WP1-WP5 默认保持 `legacy`；完成真实观察后，于 2026-08-16 切换默认值为 `runtime`，仍可显式回退到 `legacy`。
-5. 标准 function-calling 路径先迁移；Codex direct、Deep Research 在本轮保持原应用路径。
-6. 现有 `messages`、旧 ReAct 节点、LangGraph checkpoint、`personal-os/apps/agent` 在本计划内均不删除。
+4. WP1-WP5 曾使用 `MATRIX_RUNTIME_MODE` 做渐进切换；清理完成后该开关已移除，当前顶层执行固定为 Runtime。
+5. 标准 function-calling 路径由 Runtime 执行；Codex direct 和 Deep Research 通过应用级 Runtime 适配接入，但不把 Codex 内部循环套进 Runtime Core。
+6. 旧 `messages`、LangGraph checkpoint、`personal-os/apps/agent` 按迁移边界保留；顶层 legacy 执行节点和方法在验收后删除，Agent-as-Tool 嵌套 ReAct helper 暂保留。
 7. Runtime 使用不透明 `owner_id` 做隔离；认证、JWT 和当前登录用户解析仍由 HTTP/Application 层负责。
 8. 同一 session 只允许一个活动 operation；不同 session 和 DAG step 可以并行。本轮不建设多进程共享数据库或多用户同时在线能力。
 9. Runtime 状态只进入忽略的 SQLite/`var/`/临时目录，不写入 `personal-assets`，不提交 Git。
@@ -135,7 +141,7 @@ tests/runtime/
 
 - `src/matrix/runtime/__init__.py` 只导出稳定公共接口，不能从上层模块重导出类型。
 - `pyproject.toml` 不新增生产依赖；如需测试配置，只增加 `tests/runtime` 可被现有 pytest 自动发现所必需的最小配置。
-- `README.md` 增加一段 Runtime 分层说明和 `MATRIX_RUNTIME_MODE` 尚未接线的提示，避免用户误以为已切流。
+- `README.md` 增加 Runtime 分层说明；不再记录已移除的 `MATRIX_RUNTIME_MODE`。
 
 ### 4.4 架构护栏
 
@@ -257,11 +263,11 @@ git diff --check
 
 回滚：回滚 WP2 提交；WP1 的接口骨架保留。没有生产流量和 schema 变化。
 
-## 6. WP3：LangGraph 单 Agent 接入与 feature flag
+## 6. WP3：LangGraph 单 Agent 接入（历史实施记录）
 
 ### 6.1 目标
 
-让 LangGraph 的单 step 标准 function-calling 路径可选择调用 Runtime；Commander、aggregate、reflection 和多 Agent DAG 继续保留。初始默认走 legacy，完成观察后切换为 runtime。
+让 LangGraph 的单 step 标准 function-calling 路径调用 Runtime；Commander、aggregate、reflection 和多 Agent DAG 继续保留。
 
 ### 6.2 新增文件
 
@@ -278,59 +284,55 @@ tests/runtime/test_runtime_modes.py
 ### 6.3 修改文件
 
 - `src/matrix/config.py`
-  - 新增 `MATRIX_RUNTIME_MODE`；只接受 `legacy|shadow|runtime`。
-  - 初始默认值固定为 `legacy`；真实观察完成后默认切换为 `runtime`，非法值仍启动失败，不静默猜测。
-  - `AgentConfig` 增加 `runtime_mode`。
-- `.env.example`：记录三种模式、默认值和 Codex/Deep Research 例外。
+  - 迁移阶段曾增加 `MATRIX_RUNTIME_MODE`；清理阶段已移除解析，`AgentConfig.runtime_mode` 仅作为健康接口兼容字段固定为 `runtime`。
+- `.env.example`：不再记录旧切换开关。
 - `src/matrix/orchestration/runtime_adapter.py`
   - 上层解析 `AgentDefinition`、工具白名单、system prompt、history、attachments 和 execution options。
   - 构造 `RunRequest(owner_id=user_id, ...)`。
   - 将 Runtime result 转成 `AgentState` 所需的 `agent_results/tool_results/final_answer`。
-- `src/matrix/orchestration/nodes/runtime.py`：实现 `run_agent_node`；只负责调用 Adapter，不在节点内重写 ReAct。
-- `src/matrix/orchestration/nodes/__init__.py`：向 graph builder 导出新节点，保留全部 legacy 导出。
+- `src/matrix/orchestration/nodes/runtime.py`：实现 Runtime 节点；只负责调用 Adapter，不在节点内重写 ReAct。
+- `src/matrix/orchestration/nodes/__init__.py`：只向 graph builder 导出 Runtime 节点；嵌套 Agent-as-Tool helper 单独保留。
 - `src/matrix/orchestration/graph.py`
-  - `build_graph()` 增加显式 execution profile，分别编译 legacy graph 和 runtime-single graph。
-  - runtime-single graph 的单 step 路径为 `commander_plan → run_agent → aggregate → reflection`。
-  - 多 step DAG 在 WP3 仍走现有 `delegate`。
-  - 不删除 `react_prepare/react_llm/react_tool/react_evaluate`。
+  - `build_graph()` 只注册 Runtime-backed top-level nodes；LangGraph 仅负责业务编排。
+  - 单 step 路径为 `commander_plan → runtime_agent → aggregate → reflection`。
+  - 多 step DAG 使用 `runtime_delegate`。
+  - 不再注册 `react_prepare/react_llm/react_tool/react_evaluate` 顶层节点。
 - `src/matrix/orchestration/state.py`
   - 增加 `owner_id`、`orchestration_run_id`、`runtime_operations` 映射字段。
   - reducer 仍支持 DAG 并行合并；不得把完整 Runtime state 放进 LangGraph state。
 - `src/matrix/chat/_service.py`
   - 构造并持有 Runtime 及两个 compiled graph。
   - 将 HTTP 层解析后的 `user_id` 作为 `owner_id` 传入 AgentState/RunRequest。
-  - 模式选择顺序必须先识别 Codex direct 和 Deep Research，再决定 legacy/runtime graph。
-  - `legacy` 使用原 graph；`runtime` 仅对 eligible 标准 function-calling 单 Agent 路径启用新 graph。
-  - 保留 `_stream_graph_events`、旧 checkpoint 清理和旧 ReAct 代码。
+  - Codex direct 和 Deep Research 均直接进入 Runtime application adapter。
+  - 保留 `_stream_graph_events`、旧 checkpoint 清理和嵌套 Agent-as-Tool helper。
 - `src/matrix/server/runtime_sse.py`：唯一负责 Runtime Event 到现有事件名的映射。
 - `src/matrix/orchestration/events.py`：只增加调用统一映射所需的 typed helper，不能把 SSE 类型引入 Runtime Core。
 - `src/matrix/server/routes/health.py`：健康响应可增加向后兼容字段 `runtime_mode`；不得删除既有字段。
 - `tests/test_config.py`、`tests/test_chat.py`、`tests/test_orchestration.py`、`tests/test_orchestration_nodes.py`、`tests/test_server.py`：补充模式、路由和兼容断言。
 
-### 6.4 模式语义
+### 6.4 当前执行语义
 
 ```text
-legacy  现有 LangGraph ReAct 产生结果，Runtime 不参与生产执行。
-shadow  现有路径产生结果；仅进行 request mapping、eligibility 和 fixture/replay contract 校验。
-runtime eligible 单 Agent 标准 function-calling 路径由 Runtime 产生结果。
+Runtime  普通单 Agent、Codex direct、Deep Research 和 DAG step 的唯一顶层执行路径。
+LangGraph 仅负责 Commander、DAG、replan、aggregate 和 reflection。
 ```
 
-`shadow` 不得再调用一次真实模型或真实工具。没有注入 Fake/Fixture transcript 时，只记录结构化 shadow 诊断，不伪装成结果对比；确定性测试/评测注入 transcript 后才比较 event/result contract。
+历史 `legacy/shadow` 只作为迁移过程记录，不再是运行时配置，也不再参与生产路由。
 
 ### 6.5 Codex direct 和 Deep Research
 
-- Provider 为 `codex` 时，无论 `MATRIX_RUNTIME_MODE` 为何，继续调用 `_stream_codex_direct()`。
-- `mode=deep_research` 且走现有 Codex research 流时，继续调用 `_stream_deep_research()`。
+- provider 为 `codex` 时，Codex direct 通过 `ExternalAgentAdapter` 持久化 operation/event；Codex CLI 仍拥有自己的内部 Agent/tool loop。
+- `mode=deep_research` 时，固定证据采集和 synthesis 通过 `DeepResearchWorkflow` 持久化为应用级 workflow；图片附件已纳入该工作流。
 - 两条路径都不得套进 `run_agent_node`，避免双重 Agent/tool loop。
-- health/trace 记录实际 execution path，例如 `codex_direct`、`deep_research_legacy`、`runtime`，便于确认没有误切流。
-- `ExternalAgentAdapter` 和 Deep Research 工作流重构不在 WP3-WP6 实现，只记录后续项。
+- Runtime operation 的生命周期、事件顺序、失败、取消和进程重启恢复由 SQLite Runtime Store 负责；UI 事件保持既有 SSE 语义。
+- `ExternalAgentAdapter` 只映射外部 Agent 生命周期和事件，不执行 Codex 的内部工具；Deep Research adapter 只负责固定研究 workflow，不改变 Runtime Core 的依赖方向。
 
 ### 6.6 验证命令
 
 ```bash
 cd /Users/qiang.lilq/personal-system/personal-agent
-MATRIX_RUNTIME_MODE=legacy python -m pytest tests/runtime/test_runtime_modes.py tests/runtime/test_langgraph_single_agent.py tests/runtime/test_runtime_sse.py
-MATRIX_RUNTIME_MODE=runtime python -m pytest tests/runtime/test_langgraph_single_agent.py tests/test_chat.py tests/test_server.py
+python -m pytest tests/runtime/test_runtime_modes.py tests/runtime/test_langgraph_single_agent.py tests/runtime/test_runtime_sse.py
+python -m pytest tests/runtime/test_langgraph_single_agent.py tests/test_chat.py tests/test_server.py
 python -m pytest tests/test_orchestration.py tests/test_orchestration_nodes.py tests/test_e2e_p0_changes.py
 python -m pytest
 python -m matrix.evaluation.cli regression
@@ -341,9 +343,9 @@ git diff --check
 
 ### 6.7 验收与回滚
 
-验收：`legacy` 与改造前一致；`runtime` 单 Agent 路径通过；多 Agent 仍 legacy；Codex direct/Deep Research 无双循环；SSE 核心事件兼容。
+验收：普通 Codex、Deep Research 文本/图片、DeepSeek、Runtime SQLite 持久化和服务重启恢复通过；SSE 核心事件兼容。
 
-回滚：运行时立即设置 `MATRIX_RUNTIME_MODE=legacy` 并重启服务。代码层可回滚 WP3，WP1-WP2 保留且不影响生产。
+回滚：回退已部署的 Git/deployment 版本并重启服务；不再设置运行时 legacy 开关。
 
 ## 7. WP4：SQLite 持久化、Session Entry、HITL 与恢复
 
@@ -411,7 +413,7 @@ Runtime 使用现有 `MATRIX_STORE_PATH` 对应的会话 SQLite；LangGraph chec
 9. 创建 `runtime_tool_effects`，唯一约束 `(operation_id, tool_call_id)`，索引 recovery status。
 10. 写入 schema version；执行 `PRAGMA foreign_key_check`，测试环境额外执行 `PRAGMA integrity_check`。
 
-首次迁移不批量回填历史 `messages` 到 `session_entries`，避免在运行时启动阶段做大事务。只从迁移完成后的新消息开始双写；历史回填如有需要另做离线工具。
+首次迁移不在启动阶段批量回填历史 `messages` 到 `session_entries`，避免大事务。首次进入 Runtime 的无分支旧 session 会按当前历史窗口惰性回填；有分支的 session 继续使用旧消息树。之后 Runtime 读取优先使用 `session_entries`，并与旧消息窗口做兼容合并。
 
 ### 7.5 原子 transition
 
@@ -443,8 +445,8 @@ cd /Users/qiang.lilq/personal-system/personal-agent
 python -m pytest tests/runtime/test_store_contract.py tests/runtime/test_sqlite_store_contract.py tests/runtime/test_sqlite_migration.py
 python -m pytest tests/runtime/test_runtime_hitl.py tests/runtime/test_runtime_recovery.py tests/runtime/test_session_entry_dual_write.py
 python -m pytest tests/test_store.py tests/test_chat.py tests/test_server.py tests/test_auth.py tests/test_e2e_p0_changes.py
-MATRIX_RUNTIME_MODE=legacy python -m pytest
-MATRIX_RUNTIME_MODE=runtime python -m pytest tests/runtime tests/test_chat.py tests/test_server.py tests/test_orchestration.py
+python -m pytest
+python -m pytest tests/runtime tests/test_chat.py tests/test_server.py tests/test_orchestration.py
 python -m matrix.evaluation.cli regression
 git diff --check
 ```
@@ -455,7 +457,7 @@ git diff --check
 
 验收：Store contract 在 Memory/SQLite 两个实现上通过；审批可跨重启；owner 隔离和 CAS 生效；Runtime 事件先持久化后输出；legacy history/UI 不变。
 
-回滚：先设置 `MATRIX_RUNTIME_MODE=legacy` 并重启。新表、新列保留，不执行 down migration；旧 `messages` 和 legacy checkpoint 仍可直接工作。必要时回滚 WP4 代码，但不得删除 SQLite 新表。
+回滚：回退部署版本并重启。新表、新列保留，不执行 down migration；旧 `messages` 和 checkpoint 读取兼容仍可工作。必要时回滚 WP4 代码，但不得删除 SQLite 新表。
 
 ## 8. WP5：多 Agent DAG 接入 Runtime
 
@@ -486,7 +488,7 @@ tests/runtime/test_operation_concurrency.py
   - `replan_node`、`aggregate`、`reflection` 和 dependency router 不复制、不下沉到 Runtime。
 - `src/matrix/orchestration/state.py`：用可并行 reducer 保存 `{step, agent_id, operation_id, outcome}` 映射，防止 fan-in 丢失。
 - `src/matrix/orchestration/nodes/commander.py`
-  - 保留 `_run_domain_agent_react`、`delegate_node` 和 `_domain_react_fallback` 作为 legacy 回退。
+  - 保留 `_run_domain_agent_react` 和 `_domain_react_fallback`，仅供 Agent-as-Tool 嵌套兼容。
   - 只抽取可复用的 Domain Agent request preparation helper；不得让 Runtime Core 导入 Commander。
 - `src/matrix/chat/_service.py`：为每次 LangGraph 调用创建/恢复 `orchestration_run_id`；完成后更新 run status。
 - `src/matrix/runtime/adapters/sqlite_store.py`：允许同 session、同 orchestration run 的并行 step operations，但入口请求仍受单 session 单顶层活动 run 约束。
@@ -507,9 +509,8 @@ tests/runtime/test_operation_concurrency.py
 
 ```bash
 cd /Users/qiang.lilq/personal-system/personal-agent
-MATRIX_RUNTIME_MODE=runtime python -m pytest tests/runtime/test_langgraph_multi_agent.py tests/runtime/test_langgraph_replan.py tests/runtime/test_operation_concurrency.py
-MATRIX_RUNTIME_MODE=runtime python -m pytest tests/test_orchestration.py tests/test_orchestration_nodes.py tests/test_multi_sample_verify.py tests/test_reflexion.py
-MATRIX_RUNTIME_MODE=legacy python -m pytest tests/test_orchestration.py tests/test_orchestration_nodes.py
+python -m pytest tests/runtime/test_langgraph_multi_agent.py tests/runtime/test_langgraph_replan.py tests/runtime/test_operation_concurrency.py
+python -m pytest tests/test_orchestration.py tests/test_orchestration_nodes.py tests/test_multi_sample_verify.py tests/test_reflexion.py
 python -m pytest
 python -m matrix.evaluation.cli regression
 git diff --check
@@ -519,9 +520,9 @@ git diff --check
 
 ### 8.6 验收与回滚
 
-验收：DAG fan-out/fan-in、depends_on、replan、aggregate、reflection 在 Runtime profile 下通过；每 step 独立 operation；不同 owner/run 不串数据；legacy profile 仍可运行。
+验收：DAG fan-out/fan-in、depends_on、replan、aggregate、reflection 在 Runtime 路径下通过；每 step 独立 operation；不同 owner/run 不串数据。
 
-回滚：设置 `MATRIX_RUNTIME_MODE=legacy`。保留 WP5 schema 字段和索引；回滚 Runtime DAG 路由代码时，legacy `delegate_node` 立即接管。
+回滚：回退部署版本并重启。保留 WP5 schema 字段和索引，不执行 down migration。
 
 ## 9. WP6：personal-system 跨仓收口
 
@@ -571,9 +572,9 @@ WP6 分两个按顺序提交的部分：先改 `personal-os` 接入，再改顶�
 cd /Users/qiang.lilq/personal-system/personal-os
 env -u GOROOT /opt/homebrew/bin/go test ./...
 
-# 终端 A：独立启动 personal-agent，显式选择当前稳定模式
+# 终端 A：独立启动 personal-agent
 cd /Users/qiang.lilq/personal-system/personal-agent
-MATRIX_RUNTIME_MODE=runtime python -m matrix
+python -m matrix
 
 # 终端 B：external 模式启动 personal-os
 cd /Users/qiang.lilq/personal-system/personal-os
@@ -626,7 +627,9 @@ git status --short
 
 回滚：治理文档可独立回滚，但若 WP6A 已上线，不应把文档恢复成与事实相反的旧边界；优先修正文档而不是回退真实服务。
 
-## 10. Feature flag 转换阶段
+## 10. Feature flag 转换阶段（历史记录）
+
+以下 A-D 仅记录当时的迁移阶段，不能作为当前配置或回滚操作说明。
 
 ### 阶段 A：WP1-WP2
 
@@ -651,10 +654,13 @@ git status --short
 - 已完成 DeepSeek + Runtime 的真实 finance smoke，覆盖工具调用、SSE 完成事件和 Runtime SQLite 完成状态。
 - 已完成服务重启恢复验证；中断 operation 被标记为 `recovery_required`，后续 operation 正常完成。
 
-### 阶段 E：后续独立决策
+### 阶段 E：顶层 legacy 清理（已完成，2026-08-16）
 
-- 默认值切换已于 2026-08-16 完成；回退方式仍是设置 `MATRIX_RUNTIME_MODE=legacy` 并重启。
-- 后续删除 legacy 兼容路径仍需独立设计、回归和发布决策。
+- 删除 ChatService 顶层 Codex/Deep Research legacy 方法和分流。
+- 删除 LangGraph 顶层 ReAct、legacy delegate/confirm 节点及其路由注册。
+- 删除 `MATRIX_RUNTIME_MODE` 解析和 `.env.example` 中的旧切换说明。
+- 保留旧 messages/分支读取兼容、checkpoint 数据兼容和 Agent-as-Tool 嵌套 ReAct helper。
+- 回退方式改为 Git/deployment 版本回退并重启。
 
 ## 11. 跨仓提交顺序
 
@@ -673,30 +679,27 @@ git status --short
 
 顶层仓当前将 `personal-agent` 表现为 gitlink/pointer；提交顶层文档时使用显式路径暂存，默认不暂存 `personal-agent` pointer。是否长期保留、更新或移除该 gitlink 属于独立 workspace 治理决策，不夹带进 Runtime 改造。
 
-## 12. 全迁移期必须保留的兼容代码
+## 12. 当前保留的兼容代码
 
 以下内容在 WP1-WP6 中不得删除：
 
-- `src/matrix/orchestration/nodes/react.py` 及其 helper。
-- `src/matrix/orchestration/nodes/commander.py` 中的 legacy delegate/ReAct fallback。
-- `ChatService._stream_graph_events()`、legacy compiled graph 和 checkpoint resume。
-- `ChatService._stream_codex_direct()`、`_stream_deep_research()`。
+- `src/matrix/orchestration/nodes/react.py` 中被 Agent-as-Tool 复用的嵌套 ReAct helper。
+- `src/matrix/orchestration/nodes/commander.py` 中的 `_run_domain_agent_react` 和 fallback。
+- `ChatService._stream_graph_events()` 与 checkpoint resume（用于当前 Runtime-backed LangGraph 编排和历史恢复兼容）。
 - SQLite `messages` 表及其 session/history API。
 - LangGraph checkpoint SQLite 和 `MATRIX_CHECKPOINT_PATH`。
 - 现有 SSE 事件名与 `/chat`、`/reset`、sessions/provider/tools contract。
-- `personal-os/apps/agent` 全部源码和显式 legacy 启动能力。
+- `personal-os/apps/agent` 全部源码，按 personal-os 独立迁移边界处理。
 - personal-os Go API 代理边界。
 
-删除上述内容必须进入“后续清理工作包”，单独设计、确认、提交和回滚演练。
+删除上述内容仍需独立设计；本轮不删除旧数据读取兼容和嵌套 Agent-as-Tool 能力。
 
 ## 13. 后续清理项，不在本轮实施
 
-- 删除旧 ReAct 节点和 legacy compiled graph。
-- 停止 `messages` 双写或切换会话读取到 `session_entries`。
-- 历史 messages 离线回填。
+- 将 Agent-as-Tool 从嵌套 ReAct helper 迁移到 Runtime。
+- 停止 `messages` 双写（Runtime-first 读取已完成，但旧表仍是分支和 fallback 的兼容源）。
+- 删除旧消息树前完成历史迁移工具和分支语义迁移。
 - 删除 `personal-os/apps/agent`。
-- 实现 Codex `ExternalAgentAdapter`，只映射生命周期和事件，不接管 Codex 内部工具循环。
-- 将 Deep Research 预取/汇总表达为正式 Orchestration workflow。
 - JSONL session import/export。
 - SSE `id`/`Last-Event-ID` 断线续传。
 - 多进程共享 SQLite、分布式锁、队列或多用户并发平台化。
@@ -709,8 +712,8 @@ WP1-WP6 完成必须同时满足：
 2. 标准单 Agent和多 Agent Domain step 都可由 Runtime 执行。
 3. Commander、DAG、replan、aggregate、reflection 仍由 LangGraph 承担。
 4. Runtime SQLite、HITL、CAS、owner 隔离、恢复分类通过确定性测试和重启验证。
-5. Codex direct 和 Deep Research 仍是清晰的 legacy/application 例外，没有双重 Agent loop。
-6. `MATRIX_RUNTIME_MODE=legacy` 可立即回退，且不要求回滚 schema。
+5. Codex direct 和 Deep Research 通过清晰的 application adapter 接入 Runtime，没有双重 Agent loop。
+6. 发布版本可回退，且不要求回滚 schema。
 7. personal-os 默认连接独立 personal-agent，managed/external/legacy 三种开发模式行为明确。
 8. personal-os Go API、JWT 和核心 SSE contract 无回归。
 9. `personal-assets` 与 `personal-tools` 未被侵入，运行态未进入 Git。

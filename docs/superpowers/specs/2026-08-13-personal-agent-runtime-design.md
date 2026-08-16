@@ -1,6 +1,6 @@
 # Personal Agent 独立 Runtime 详细设计
 
-> 状态：已完成设计并已落地 WP1-WP6；2026-08-16 已完成真实观察并切换 runtime 默认模式
+> 状态：已完成设计并落地；2026-08-16 已完成真实观察并清理顶层 legacy 执行路径
 >
 > 日期：2026-08-13
 >
@@ -36,7 +36,7 @@
 - LangGraph checkpoint 管理；
 - 最终消息保存和 Memory Evolution。
 
-单 Agent 主链目前表现为：
+迁移前单 Agent 主链表现为：
 
 ```text
 react_prepare
@@ -77,7 +77,8 @@ react_prepare
 - 不引入 Postgres、分布式锁、消息队列或跨机器 operation 恢复。
 - 不在本次改造中清理现有 JWT、`user_id` 字段或用户表。
 - 不让 Runtime 直接写 `personal-assets` 文件或绕过受控工具/API。
-- 不立即删除旧 ReAct、旧 messages 表或 `personal-os/apps/agent`。
+- 不删除旧 `messages` 表、分支读取兼容或 `personal-os/apps/agent`（它们属于独立迁移边界）。
+- Agent-as-Tool 内部仍保留嵌套 ReAct helper，直到该能力迁移到 Runtime；它不是顶层业务执行路径。
 - 不在第一阶段统一 Codex CLI 自带 Agent 循环。
 
 ## 4. 已确认的关键决策
@@ -117,19 +118,11 @@ SQLite 用于：
 - 同一用户的不同 session 可以并行。
 - LangGraph DAG 的不同 Domain Agent operation 可以并行。
 
-### 4.4 渐进迁移并保留 legacy 回退
+### 4.4 Runtime 固定主路径
 
-采用 feature flag：
+Runtime 已完成真实观察并成为唯一顶层执行路径。`MATRIX_RUNTIME_MODE` 不再参与路由；健康接口保留 `runtime_mode="runtime"` 作为兼容字段。发布回退通过 Git/deployment 版本回退并重启，不通过运行时 legacy 开关。
 
-```text
-MATRIX_RUNTIME_MODE=legacy | shadow | runtime
-```
-
-- `legacy`：使用现有 ReAct 节点。
-- `shadow`：旧路径提供结果，新 Runtime 只使用 Fake/Fixture 对比，不重复真实模型调用和工具副作用。
-- `runtime`：新 Runtime 提供结果。
-
-数据库迁移只向前增加，不依赖回滚 schema。发生问题时切回 `legacy`。
+正常单 Agent 和 Deep Research 的图片附件均以 provider-neutral content blocks 传递，并由应用层适配为 `image_url` data URL。旧 `messages`/分支数据仍保留读取兼容，Agent-as-Tool 的嵌套 ReAct helper 仍保留，不能误认为顶层 legacy。
 
 ## 5. 目标架构
 
@@ -737,7 +730,7 @@ commander_plan
 
 ```text
 commander_plan
-  → Send("delegate") × N
+  → Send("runtime_delegate") × N
        ├─ AgentRuntime.run(investment-analyst)
        ├─ AgentRuntime.run(knowledge-manager)
        └─ AgentRuntime.run(coding-assistant)
@@ -758,13 +751,13 @@ Codex CLI 已经拥有自己的 Agent 和工具循环。第一阶段不能把它
 
 处理方式：
 
-- WP1-WP4 优先接入标准 function-calling/DeepSeek 路径。
-- Codex direct 暂时保留 legacy application path。
-- 后续新增 `ExternalAgentAdapter`，把 Codex 的事件、结果和持久化映射到 Runtime operation 生命周期，但不接管其内部工具循环。
+- Codex direct 通过 Runtime application adapter 接入；adapter 只把外部进程的 started/message/tool/progress/completed/failed/cancelled 生命周期映射为 Runtime operation/event。
+- Codex CLI 继续拥有自己的 Agent/tool loop，Runtime 不再次规划或执行 Codex 的工具调用，避免双重 Agent。
+- Codex direct 不再保留顶层 legacy direct 路径；回退通过代码版本回退完成。
 
 ### 16.6 Deep Research
 
-当前 deep research 含固定工具预取和 Codex 汇总。它属于应用工作流，不属于通用 Runtime。第一阶段保留原路径；DAG Runtime 稳定后，再将每个预取步骤表达为 Orchestration step 或受控 Tool workflow。
+当前 deep research 含固定工具预取和 Codex 汇总。它属于应用工作流，不属于通用 Runtime。现已通过 `DeepResearchWorkflow` 接入 Runtime Store：每个证据工具调用、失败重试和 synthesis 都产生有序 Runtime event；workflow 本身仍位于 application adapter 层，不下沉到通用 Runtime Core。图片附件已纳入同一 Runtime 工作流。
 
 ## 17. HTTP/SSE 兼容
 
@@ -813,7 +806,7 @@ Orchestration Event 继续映射到 `classify/progress/agent_result` 等现有�
 - Runtime Store；
 - LangGraph Adapter；
 - SSE Adapter；
-- legacy/runtime feature flag；
+- Runtime 固定主路径；发布回退通过版本回退；
 - 测试和评测。
 
 ### 18.2 personal-os
@@ -898,14 +891,14 @@ external 模式不管理 personal-agent 生命周期，适合独立调试和未�
 
 验收：Fake Model 下完整覆盖单 Agent 主链，不改变线上流量。
 
-### WP3：LangGraph 单 Agent 接入
+### WP3：LangGraph 单 Agent 接入（已完成）
 
 - 新增 `run_agent_node`。
-- 支持 `legacy/shadow/runtime`。
+- Runtime 成为唯一顶层执行路径，健康字段仍固定返回 `runtime`。
 - 标准 function-calling 路径可以切换到 Runtime。
-- Codex direct、deep research、多 Agent DAG 保持 legacy。
+- Codex direct、deep research 通过 application adapter 接入 Runtime；多 Agent DAG 继续由 LangGraph + Runtime step 路径负责。
 
-验收：单 Agent 主链在 runtime 模式下行为兼容，可一键切回 legacy。
+验收：普通 Codex、Deep Research 文本/图片、DeepSeek、SQLite 持久化和重启恢复已通过真实验收。
 
 ### WP4：SQLite 持久化与 HITL
 
@@ -919,7 +912,7 @@ external 模式不管理 personal-agent 生命周期，适合独立调试和未�
 
 ### WP5：多 Agent DAG 接入
 
-- `delegate_node` 为每个 step 构造 RunRequest。
+- `runtime_delegate_node` 为每个 step 构造 RunRequest。
 - 保留 Send、step dependency、replan、aggregate 和 reflection。
 - 统一 Domain Agent 执行路径。
 - 保持每 step 独立 operation。
@@ -936,17 +929,12 @@ external 模式不管理 personal-agent 生命周期，适合独立调试和未�
 
 验收：personal-os 产品入口无感切换到独立 Agent，旧 Agent 不再承担默认运行职责。
 
-### 后续清理工作包
+### 后续清理边界
 
-以下必须单独决策和提交：
-
-- 删除旧 ReAct 节点；
-- 停止旧 messages 双写；
-- 删除 `personal-os/apps/agent`；
-- Codex ExternalAgentAdapter；
-- Deep Research 工作流统一；
-- JSONL import/export；
-- SSE 断线续传。
+- 已删除顶层 legacy Codex/Deep Research 方法、顶层 legacy LangGraph 路由和运行时切换开关。
+- 保留旧 messages/分支读取兼容、Runtime-first 双写和 `personal-os/apps/agent` 迁移边界。
+- 保留 Agent-as-Tool 所需的嵌套 ReAct helper；后续若迁移该能力，再单独删除。
+- JSONL import/export、SSE 断线续传仍是独立后续工作。
 
 ## 21. 测试策略
 
@@ -1028,11 +1016,11 @@ external 模式不管理 personal-agent 生命周期，适合独立调试和未�
 ## 23. 切换与回滚
 
 - 每个 WP 独立提交。
-- Runtime 默认不开启，先通过显式环境变量启用。
-- 切换失败时回到 `legacy`，不回滚数据库 schema。
+- 当前顶层执行固定为 Runtime；发生问题时回退部署版本并重启。
+- 不再通过 `MATRIX_RUNTIME_MODE` 切换；数据库 schema 继续只做向前兼容迁移。
 - 新表只做向前兼容迁移。
-- 旧 ReAct、旧 messages 表和旧 personal-os Agent 在整个迁移期保留。
-- 删除动作安排在独立提交，且必须已有稳定观察期和回退替代物。
+- 旧 messages 表、分支读取兼容和旧 personal-os Agent 继续按各自迁移边界保留。
+- Agent-as-Tool 嵌套 ReAct helper 暂保留；顶层 legacy 清理已完成。
 
 ## 24. 完成标准
 
@@ -1046,7 +1034,7 @@ external 模式不管理 personal-agent 生命周期，适合独立调试和未�
 6. 多 Agent DAG 通过 Runtime 执行 Domain Agent，Commander/replan/aggregate/reflection 保持有效。
 7. personal-os 通过稳定 Go API/SSE 使用独立 personal-agent。
 8. personal-assets 的 durable source 边界不变，运行态不进入 Git。
-9. legacy 回退在清理工作包之前始终可用。
+9. 发布版本回退路径明确，且不依赖运行时 legacy 开关。
 10. 现有领域评测和产品 smoke 不退化。
 
 ## 25. 后续文档与实施顺序

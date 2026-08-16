@@ -14,7 +14,7 @@
 4. SSE 客户端断连后，生成器仍在 `finally` 中发送 `done`；
 5. Mac GUI 启动环境找不到 `codex`，导致默认 Provider unavailable。
 
-本次目标不是增加新功能，而是把已确认的 Runtime 设计不变量补完整。修复后仍保持 Runtime Core 下层化、LangGraph 负责编排、SQLite 作为权威运行态、legacy 可立即回退。
+本次目标不是增加新功能，而是把已确认的 Runtime 设计不变量补完整。修复后仍保持 Runtime Core 下层化、LangGraph 负责编排、SQLite 作为权威运行态；当时的 legacy 回退仅属于迁移阶段。
 
 ## 2. 方案选择
 
@@ -111,7 +111,7 @@ Runtime Core 内只保留一个工具执行入口：
 - Mac Swift build 通过，启动命令能解析可执行的 `CODEX_BIN`；
 - 既有 Runtime/编排/API、Go 全量测试和 managed/legacy smoke 无回归。
 
-本文记录的是切换前的 hardening 设计；2026-08-16 已完成真实观察并将 `MATRIX_RUNTIME_MODE` 默认切换为 `runtime`，`legacy` 仍保留为回退模式。
+本文记录的是切换前的 hardening 设计；2026-08-16 已完成真实观察和顶层 legacy 清理，`MATRIX_RUNTIME_MODE` 已移除。发布回退通过版本回退并重启。
 
 ## 9. 实施与验收结果
 
@@ -134,7 +134,7 @@ Runtime Core 内只保留一个工具执行入口：
 - Debug Trace 只用于当前运行期间的诊断展示，默认不进入 SQLite 长期数据，也不写入 Vault；需要保留的仍是 operation、approval、effect 和工具结果摘要等可审计事件；
 - `AgentMode / Preset` 是 Runtime 之上的能力、权限、上下文和输出策略，不是新的 Agent 实现；
 - 初始只规划 `read_only` 与受审批保护的 `writeback`，不因增加模式而扩大 Agent 的自主写入权限；
-- `MATRIX_RUNTIME_MODE=legacy/shadow/runtime` 仍表示执行引擎兼容模式，与面向用户的 `AgentMode` 分离；
+- 历史 `MATRIX_RUNTIME_MODE=legacy/shadow/runtime` 只用于解释迁移过程，不再是当前配置；`AgentMode` 与 `Preset` 仍与 Runtime 内核分离；
 - 以上能力不得改变 LangGraph Adapter、Runtime Core、personal-os 和 personal-assets 的单向依赖边界。
 
 ## 11. 第一批实现记录（2026-08-14）
