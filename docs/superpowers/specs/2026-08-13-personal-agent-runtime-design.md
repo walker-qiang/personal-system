@@ -1,6 +1,6 @@
 # Personal Agent 独立 Runtime 详细设计
 
-> 状态：已完成设计并已落地 WP1-WP6；默认仍为 legacy，runtime 需显式开启
+> 状态：已完成设计并已落地 WP1-WP6；2026-08-16 已完成真实观察并切换 runtime 默认模式
 >
 > 日期：2026-08-13
 >

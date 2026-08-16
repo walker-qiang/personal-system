@@ -17,7 +17,7 @@
 1. 先在独立 `personal-agent` 内完成 Runtime，再调整 `personal-os` 的启动和治理边界。
 2. `runtime.domain`、`runtime.ports`、`runtime.core` 严格单向依赖，不得导入 LangGraph、FastAPI、ChatService、Commander、AgentRegistry、具体 Domain Agent 或 `personal-os`。
 3. 每个 WP 都保留可用回退点；数据库迁移只向前增加，代码回滚不删除新表。
-4. `MATRIX_RUNTIME_MODE` 在 WP1-WP5 始终默认 `legacy`，只有显式配置才进入 `shadow` 或 `runtime`。
+4. `MATRIX_RUNTIME_MODE` 在 WP1-WP5 默认保持 `legacy`；完成真实观察后，于 2026-08-16 切换默认值为 `runtime`，仍可显式回退到 `legacy`。
 5. 标准 function-calling 路径先迁移；Codex direct、Deep Research 在本轮保持原应用路径。
 6. 现有 `messages`、旧 ReAct 节点、LangGraph checkpoint、`personal-os/apps/agent` 在本计划内均不删除。
 7. Runtime 使用不透明 `owner_id` 做隔离；认证、JWT 和当前登录用户解析仍由 HTTP/Application 层负责。
@@ -261,7 +261,7 @@ git diff --check
 
 ### 6.1 目标
 
-让 LangGraph 的单 step 标准 function-calling 路径可选择调用 Runtime；Commander、aggregate、reflection 和多 Agent DAG 继续保留。默认仍走 legacy。
+让 LangGraph 的单 step 标准 function-calling 路径可选择调用 Runtime；Commander、aggregate、reflection 和多 Agent DAG 继续保留。初始默认走 legacy，完成观察后切换为 runtime。
 
 ### 6.2 新增文件
 
@@ -279,7 +279,7 @@ tests/runtime/test_runtime_modes.py
 
 - `src/matrix/config.py`
   - 新增 `MATRIX_RUNTIME_MODE`；只接受 `legacy|shadow|runtime`。
-  - 默认值固定为 `legacy`；非法值启动失败，不静默猜测。
+  - 初始默认值固定为 `legacy`；真实观察完成后默认切换为 `runtime`，非法值仍启动失败，不静默猜测。
   - `AgentConfig` 增加 `runtime_mode`。
 - `.env.example`：记录三种模式、默认值和 Codex/Deep Research 例外。
 - `src/matrix/orchestration/runtime_adapter.py`
@@ -645,17 +645,16 @@ git status --short
 - 完成 SQLite/HITL/DAG 验收后，在开发环境把 `runtime` 作为日常观察模式。
 - 任一 correctness、隔离、恢复或评测回归立即切回 `legacy`。
 
-### 阶段 D：WP6 稳定观察
+### 阶段 D：WP6 稳定观察（已完成）
 
-- `personal-os` 默认连接独立 personal-agent，但 personal-agent 内部 flag 初始仍可保持 `legacy`。
-- 独立服务连接稳定后，再将本机 `.env` 显式设置为 `runtime`。
-- 观察期至少覆盖：普通问答、工具调用、会话恢复、多 Agent、Provider 切换、服务重启。
+- `personal-os` 默认连接独立 personal-agent。
+- 已完成 DeepSeek + Runtime 的真实 finance smoke，覆盖工具调用、SSE 完成事件和 Runtime SQLite 完成状态。
+- 已完成服务重启恢复验证；中断 operation 被标记为 `recovery_required`，后续 operation 正常完成。
 
 ### 阶段 E：后续独立决策
 
-- 只有观察期通过并确认删除计划后，才考虑把代码默认值从 `legacy` 改为 `runtime`。
-- 默认值变更必须是独立提交，附完整回归结果和回退说明。
-- 本 WP1-WP6 计划不执行该默认值变更。
+- 默认值切换已于 2026-08-16 完成；回退方式仍是设置 `MATRIX_RUNTIME_MODE=legacy` 并重启。
+- 后续删除 legacy 兼容路径仍需独立设计、回归和发布决策。
 
 ## 11. 跨仓提交顺序
 
@@ -692,7 +691,6 @@ git status --short
 
 ## 13. 后续清理项，不在本轮实施
 
-- 默认值从 `legacy` 改成 `runtime`。
 - 删除旧 ReAct 节点和 legacy compiled graph。
 - 停止 `messages` 双写或切换会话读取到 `session_entries`。
 - 历史 messages 离线回填。

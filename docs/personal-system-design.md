@@ -481,7 +481,7 @@ Runtime 不理解业务 DAG；Adapter 把 LangGraph step 映射为独立 `RunReq
 - owner 隔离；
 - legacy、shadow、runtime 模式。
 
-默认模式仍是 `legacy`。切换默认值必须经过独立观察和发布决策，不能因为 Runtime 已存在就自动启用。
+默认模式已切换为 `runtime`，并完成 DeepSeek + 真实 finance smoke 验收；`legacy` 仍可通过环境变量显式回退。
 
 这里的 `legacy`、`shadow` 和 `runtime` 是执行引擎兼容模式，不等同于面向用户的 `AgentMode`；后者用于声明一次任务允许使用的能力、权限和输出策略。
 
@@ -578,7 +578,7 @@ Spaces
 | macOS App | 已可用 | 当前主入口，聚焦投资和个人助理 |
 | Web | 冻结 fallback | 兼容、调试和 E2E，不作为主产品入口 |
 | Independent Agent service | 已可用 | HTTP/SSE 接入 `personal-os` |
-| Independent Runtime | 已实现、观察中 | 默认仍为 legacy |
+| Independent Runtime | 已实现、已完成真实观察 | 默认 runtime，legacy 可回退 |
 | Ephemeral Debug Trace | 基础能力已实现 | 调试期间临时展示，不进入长期持久化；Web 已支持显式开关 |
 | AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；受控写回工具仍未开放 |
 | Agent durable write | 未开放 | 当前保持只读或通过已有窄 API |

@@ -111,7 +111,7 @@ Runtime Core 内只保留一个工具执行入口：
 - Mac Swift build 通过，启动命令能解析可执行的 `CODEX_BIN`；
 - 既有 Runtime/编排/API、Go 全量测试和 managed/legacy smoke 无回归。
 
-默认 `MATRIX_RUNTIME_MODE` 本次仍保持 `legacy`。只有上述验收全部通过并经过真实观察期，才单独讨论默认值切换。
+本文记录的是切换前的 hardening 设计；2026-08-16 已完成真实观察并将 `MATRIX_RUNTIME_MODE` 默认切换为 `runtime`，`legacy` 仍保留为回退模式。
 
 ## 9. 实施与验收结果
 
@@ -125,7 +125,7 @@ Runtime Core 内只保留一个工具执行入口：
 - Python 可运行全量套件通过 `876 passed, 6 skipped`；可选 RAG/KG 测试因本机未安装 `chromadb`、`networkx` 未纳入该次运行；
 - `go test ./...`、Swift debug/release build 和本地 Mac App bundle 构建通过；ChatGPT bundled Codex 路径已确认可执行。
 
-默认模式继续保持 `legacy`。Runtime 已具备观察条件，但默认值切换仍应作为独立变更，在 App 重启使用新 bundle 并完成一段真实使用观察后决定。
+默认模式已切换为 `runtime`。切换前已完成 App 重启、DeepSeek 真实工具调用、SSE 完成事件和 Runtime SQLite 状态验收。
 
 ## 10. 后续 Runtime 演进边界
 
