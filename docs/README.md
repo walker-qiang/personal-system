@@ -22,7 +22,8 @@
 1. [personal-os Architecture](personal-os-architecture.md)：早期/V1 架构参考，最新全局边界以 canonical 文档为准。
 2. [personal-agent 系统架构](../personal-agent/docs/architecture.md)
 3. [Agent Runtime 加固设计与验收](plans/2026-08-14-agent-runtime-hardening-design.md)
-4. [Pi-Agent 借鉴设计](../personal-agent/docs/matrix-pi-borrow-design.md)
+4. [投研数据层 P0 实施设计](plans/2026-08-16-investment-data-layer-p0-design.md)
+5. [Pi-Agent 借鉴设计](../personal-agent/docs/matrix-pi-borrow-design.md)
 
 ## 历史定位、路线和迁移记录
 
