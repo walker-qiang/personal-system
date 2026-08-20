@@ -36,12 +36,10 @@ personal-assets/
   财富/
     资产/
     快照/
-    交易/
-    作废/
-    报表/
-    模式/
-      示例/
-    审计/
+    投研/
+    原始资料/
+    投资政策.md
+    targets.yaml
 
   技能/
   附件/
@@ -60,7 +58,7 @@ personal-assets/
 - `项目/` 可按 `README.md`、`过程记录/`、`交付物/`、`归档/` 组织阶段性产物。
 - `长乐道/`：人工主导的个人记录、复盘和长期轨迹；AI 默认不改写原文。
 - `长乐道/` 不用 `草稿/`、`decisions/` 这类状态型目录；草稿状态通过 frontmatter 表达。
-- `财富/`：结构化财富 facts、schema、审计和报表；facts 由程序主导写入，人工只做校验和例外处理。
+- `财富/`：结构化财富 facts、月度快照、投资政策和投研材料；资产与快照由程序主导写入，人工只做校验和例外处理。
 - `财富/投研/`：承接研究、观察池和模板类投研产物，由 AI 和人工共同维护，但不等同于财富事实。
 - `技能/`：由人工定义、AI 协助迭代的可复用 workflow / skill。
 - `附件/`：Vault 级附件；新附件默认按 `YYYY-MM/` 归档。
@@ -83,8 +81,8 @@ personal-assets/
 - 不提交 SQLite、cache、logs、`node_modules`、`dist` 或运行态文件。
 - secrets、credentials 等敏感内容按归属进入受保护目录（如 `财富/原始资料/`、`长乐道/` 下的专用路径），仍受 Git 跟踪。
 - 高风险或来源不足内容用 `status: draft`，不另建 `drafts/` 目录。
-- 快照、交易、采集记录、审计日志优先 append-only。
-- 财富 facts 必须能通过 `财富/模式/` 的 schema 和仓库级校验。
+- 快照和采集记录优先 append-only。
+- 财富 facts 必须符合 `资产/`、`快照/`、`targets.yaml` 的当前数据约定，并通过应用 workflow 校验。
 - 产品/runtime 写入应通过受控接口，例如 `AssetStore`。
 - 敏感内容按归属进入 `长乐道/` 或 `财富/`；其他目录默认只放通用材料。
 - Obsidian 稳定配置可以提交；`.obsidian/workspace.json` 和 `workspace-mobile.json` 是本机状态，不提交。
@@ -95,12 +93,13 @@ personal-assets/
 财富/
   资产/          asset master data
   快照/YYYY/MM/  point-in-time asset values
-  交易/YYYY/MM/  transaction facts
-  作废/YYYY/MM/  void facts
-  targets.yaml  allocation targets
+  投研/          research, watchlists, reviews, and templates
+  原始资料/      non-tabular sensitive finance source documents
+  投资政策.md    personal investment policy
+  targets.yaml   allocation targets
 ```
 
-持仓由快照推导，不直接手工维护。修正用 correction fact 表达，废弃用 void fact 表达，避免重写历史。
+持仓由快照推导，不直接手工维护。当前不单独维护逐笔交易、作废、报表或审计目录；组合判断和复盘写入 `投研/`，数据摘要从快照重算。
 
 ## 隐私分层
 
