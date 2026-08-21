@@ -28,12 +28,10 @@
 - [文档索引](docs/README.md)
 - [personal-system 最新设计](docs/personal-system-design.md)
 - [目标项目进度](docs/project-progress.md)
-- [定位](docs/positioning.md)
 - [personal-assets 契约](docs/personal-assets-contract.md)
 - [AssetStore 协议](docs/assetstore-protocol.md)
-- [personal-os 早期/V1 架构参考](docs/personal-os-architecture.md)
-- [实施路线图](docs/implementation-roadmap.md)
 - [Finance Fact Model V1](docs/finance-fact-model-v1.md)
-- [Finance CSV 迁移映射](docs/finance-csv-migration-mapping.md)
+- [投研质量闸门进展](docs/research-quality-gate-progress.md)
+- [历史文档归档](docs/archive/README.md)
 
 V1 实现边界以 [personal-os/docs/migration-boundary.md](personal-os/docs/migration-boundary.md) 为准。

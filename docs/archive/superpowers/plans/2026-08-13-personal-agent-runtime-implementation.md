@@ -608,7 +608,7 @@ managed 是目标默认；external 是部署/独立调试模式；legacy 只验�
 - `docs/project-progress.md`
   - 长期项目表增加 `personal-agent`。
   - 迁移来源表不再把当前独立仓当作已归档来源；历史旧路径可单独标注。
-- `docs/personal-os-architecture.md`
+- `docs/archive/reference/personal-os-architecture.md`
   - 将 `apps/agent` 责任改为外部 `personal-agent` 服务边界。
   - 保留 `personal-os` 的产品/API 责任，不再宣称其拥有 Agent Runtime 源码。
 - `docs/README.md`：加入本实施计划和最终架构文档索引。

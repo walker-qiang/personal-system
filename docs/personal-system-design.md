@@ -2,11 +2,11 @@
 
 > 文档状态：Canonical Architecture Baseline
 >
-> 基线日期：2026-08-14
+> 基线日期：2026-08-21
 >
 > 适用范围：`personal-system`、`personal-assets`、`personal-os`、`personal-agent`、`personal-tools`
 >
-> 当前产品边界：`personal-os` V1 仍以投资快照和个人助理工作台为主，长期设计不自动扩大当前实现范围。
+> 当前产品边界：`personal-os` V1 以投资快照、投研数据和个人助理工作台为主，长期设计不自动扩大当前实现范围。
 
 ## 1. 文档目的
 
@@ -141,6 +141,7 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 - Go API；
 - finance cache 和确定性计算；
 - snapshot create/correct/void 等窄结构化写入；
+- 研究数据、研究卡、估值快照、观察池和基金池的受控 API 工作流；
 - AssetStore 写入协议；
 - Agent HTTP/SSE 代理；
 - doctor、smoke 和本地运行管理；

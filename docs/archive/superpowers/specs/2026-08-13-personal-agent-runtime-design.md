@@ -843,7 +843,7 @@ Orchestration Event 继续映射到 `classify/progress/agent_result` 等现有�
 
 - `workspace.yaml`
 - `docs/project-progress.md`
-- `docs/personal-os-architecture.md`
+- `docs/archive/reference/personal-os-architecture.md`
 - `personal-os/docs/migration-boundary.md`
 
 修正“独立 personal-agent 已归档”的历史判断，记录新的长期边界。

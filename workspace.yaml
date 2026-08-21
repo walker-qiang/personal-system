@@ -29,9 +29,9 @@ projects:
     status: active
     completion: usable
     long_term: true
-    role: finance snapshot operating app and product/API entrypoint for the independent Agent
-    scope: finance snapshot input, finance reads, cache/status checks, Agent HTTP/SSE proxy
-    next: design and pilot the personal-assets automation boundary
+    role: finance and investment operating app and product/API entrypoint for the independent Agent
+    scope: finance snapshots, investment research data, watchlists, fund pool, cache/status checks, Agent HTTP/SSE proxy
+    next: implement and pilot the personal-assets automated investment research loop
   - name: personal-agent
     path: personal-agent
     git: independent
