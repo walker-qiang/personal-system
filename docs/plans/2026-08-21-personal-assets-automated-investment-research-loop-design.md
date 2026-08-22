@@ -1,8 +1,13 @@
 # personal-assets 自动化投研闭环设计
 
-> 状态：设计已确认，尚未实施
+> 状态：V1 已实施并完成本地端到端 smoke
 > 日期：2026-08-21
 > 范围：`personal-assets`、`personal-os`、`personal-agent`
+>
+> 实施说明：`personal-os` ReviewService 使用
+> `var/automation/reviews.sqlite` 保存任务、失败和退避状态；后台服务由 launchd
+> 持续运行。macOS 只负责配置、立即复查和展示。研究版本继续使用 schema v2
+> 研究卡，消息由相邻版本差异生成可重建投影。
 
 ## 1. 背景与目标
 

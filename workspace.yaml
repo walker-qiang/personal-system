@@ -21,7 +21,7 @@ projects:
     completion: stable
     long_term: true
     role: durable source of truth for finance facts and broader personal assets
-    primary_entry: Obsidian for broader knowledge; personal-os API for narrow finance snapshot writes
+    primary_entry: Obsidian for broader knowledge; personal-os API for controlled finance, investment, memory, and skill writes
     next: keep personal-assets as the only active asset directory; continue day-to-day knowledge refinement and historical doc cleanup
   - name: personal-os
     path: personal-os
@@ -31,7 +31,7 @@ projects:
     long_term: true
     role: finance and investment operating app and product/API entrypoint for the independent Agent
     scope: finance snapshots, investment research data, watchlists, fund pool, cache/status checks, Agent HTTP/SSE proxy
-    next: implement and pilot the personal-assets automated investment research loop
+    next: observe automated investment reviews and refine task/message quality
   - name: personal-agent
     path: personal-agent
     git: independent
@@ -40,7 +40,7 @@ projects:
     long_term: true
     role: independent Python Agent Runtime and chat/tool service; personal-os consumes it over HTTP/SSE
     scope: model/tool loop, Runtime operations, approvals, sessions, traces, and Agent application workflows
-    next: support personal-assets automation design and continue provider/recovery hardening
+    next: continue provider/recovery hardening while keeping all durable writes behind personal-os
   - name: personal-tools
     path: personal-tools
     git: independent

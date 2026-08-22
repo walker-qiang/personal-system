@@ -11,12 +11,12 @@
 - 子项目独立 Git 跟踪，不使用 submodule。
 - 顶层 Git 不跟踪子项目源码目录、cache、SQLite、logs、`.env`、`node_modules`、`dist` 等运行态。
 - `personal-assets` 是 durable source of truth。
-- `personal-os` V1 是投资快照操作应用，不替代 Obsidian。
+- `personal-os` V1 是投资快照、投研数据和个人助理工作台，不替代 Obsidian。
 
 ## 当前子项目
 
 - [personal-assets](personal-assets/)：长期数据与知识资产仓，独立 Git repo。
-- [personal-os](personal-os/)：投资快照应用，独立 Git repo。
+- [personal-os](personal-os/)：投资与个人助理工作台，包含持久化自动投研后台，独立 Git repo。
 - [personal-agent](personal-agent/)：独立 Python Agent Runtime 和应用服务，独立 Git repo。
 - [personal-tools](personal-tools/)：可复用工具、MCP server、脚本和自动化，独立 Git repo。
 

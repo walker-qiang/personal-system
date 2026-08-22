@@ -21,6 +21,7 @@
 1. [personal-agent 系统架构](../personal-agent/docs/architecture.md)
 2. [Agent Runtime 与质量门禁](../personal-agent/docs/quality-gate-plan.md)
 3. [投研数据层自动化闭环设计](plans/2026-08-21-personal-assets-automated-investment-research-loop-design.md)
+4. [架构边界收口设计与实施](plans/2026-08-21-personal-system-architecture-boundary-hardening-design.md)
 
 ## 归档文档
 

@@ -142,6 +142,8 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 - finance cache 和确定性计算；
 - snapshot create/correct/void 等窄结构化写入；
 - 研究数据、研究卡、估值快照、观察池和基金池的受控 API 工作流；
+- 持久化自动投研 ReviewService、任务状态和失败退避；
+- Memory/Skill operation-specific Vault API；
 - AssetStore 写入协议；
 - Agent HTTP/SSE 代理；
 - doctor、smoke 和本地运行管理；
@@ -191,6 +193,9 @@ flowchart TD
     WEB["Frozen Web fallback"] --> API
 
     API --> FC["Finance Core / Cache / Writes"]
+    API --> REVIEW["ReviewService / reviews.sqlite"]
+    REVIEW -->|"Deep Research"| AGENT
+    REVIEW --> AS
     FC --> FDB["Finance SQLite Cache"]
     FC --> AS["AssetStore"]
     AS --> VAULT["personal-assets Vault"]
@@ -206,7 +211,7 @@ flowchart TD
     VAULT -->|"rebuild"| FDB
 ```
 
-当前本地部署是单 App、单 Agent 进程模型。系统同一时刻只面向一个登录用户，但允许不同时间由不同用户登录。会话和 Runtime operation 使用 `owner_id` 隔离；Vault 仍是该安装节点的个人资产边界，不按公共 SaaS 多租户设计。
+当前 API 和 Agent 由 launchd supervisor 持续运行，macOS App 是可退出的产品客户端；关闭窗口不停止自动投研。系统同一时刻只面向一个登录用户，但允许不同时间由不同用户登录。会话和 Runtime operation 使用 `owner_id` 隔离；Vault 仍是该安装节点的个人资产边界，不按公共 SaaS 多租户设计。
 
 ## 6. 严格依赖方向
 
@@ -372,7 +377,9 @@ Agent result
   → rebuild projections
 ```
 
-在 WritebackService 和路径化权限落地前，Agent 默认保持只读，不得直接写 Vault。
+Agent 默认保持只读，不得直接写 Vault。当前 Memory/Skill mutation 通过
+`personal-os /api/vault/*` 的 operation-specific 校验和 AssetStore 执行；
+Runtime writeback 继续使用 plan → approval → execute。
 
 ### 9.4 Input 与 Progressive Structure
 
@@ -503,7 +510,8 @@ Output Contract
 Risk / Confirmation Policy
 ```
 
-当前 Skills 已能被 Agent 加载和执行，但通用的路径化写入授权与 Writeback enforcement 仍是目标能力。
+当前 Skills 已能被 Agent 加载和执行；Memory/Skill mutation 已有
+operation-specific Vault API。通用路径授权、provenance 和草稿升级仍属于后续目标。
 
 ### 11.4 AgentMode 与 Preset
 
@@ -585,10 +593,12 @@ Spaces
 | Ephemeral Debug Trace | 基础能力已实现 | 调试期间临时展示，不进入长期持久化；Web 已支持显式开关 |
 | AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；Runtime 只执行应用层解析后的策略 |
 | Agent durable write | 受控开放 | 当前仅开放 `finance.snapshot.create` 的 plan → approval → execute 链路；不等于开放任意 Vault 写入 |
+| Memory / Skill durable write | 已收口 | Agent 请求经 `personal-os /api/vault/*` 和 AssetStore commit/push，不直接写 Vault |
+| Investment ReviewService | 已实现 | SQLite 持久化任务、到期扫描、单飞执行、失败退避和研究卡写回 |
 | Generic Semantic Projection | 未形成系统边界 | Agent 内有 RAG/Graph 能力，但不是 canonical projection |
-| New / Changed engine | 未实现 | 当前 Today 不代表该能力 |
+| New / Changed engine | 投资场景已实现 | 研究卡相邻版本差异生成消息投影；通用 Changes engine 尚未实现 |
 | Generic Decision Service | 未实现 | 有投研和 Decision Skill 资产，但无通用服务 |
-| Generic Writeback Service | 未实现 | 继续保持 finance 专用窄边界，通用 Vault 写回需另行设计和验收 |
+| Generic Writeback Service | 部分实现 | finance、investment、memory、skill 已有 operation-specific 写入；任意路径写回仍未开放 |
 | Cloud node / mobile | 延后 | 不属于当前 V1 |
 
 ## 15. 当前架构与长期目标的主要差距
@@ -619,11 +629,14 @@ Entity、Topic、Claim、Belief、Decision 和 Relation 尚未形成统一可重
 
 ### 15.7 Generic Writeback
 
-AssetStore 已证明 finance 窄写入可行，但通用路径授权、草稿升级、provenance 校验和幂等恢复尚未设计完成。
+AssetStore 已统一 clean、sync、限定路径 commit 和 push；finance、investment、
+memory、skill 使用 operation-specific 写入。通用路径授权、草稿升级和 provenance
+校验仍未设计完成。
 
 ### 15.8 Managed Process Lifecycle
 
-Mac 可以启动 API 和 Agent，但进程生命周期、日志消费、退出清理、失败重启和打包发布仍需继续产品化。
+API 和 Agent 已由 launchd supervisor 持续运行，App 退出不停止 ReviewService。
+日志消费、失败告警和正式发布打包仍需继续产品化。
 
 ## 16. 演进路线
 
@@ -633,7 +646,7 @@ Mac 可以启动 API 和 Agent，但进程生命周期、日志消费、退出�
 
 1. 继续真实使用 finance snapshot workflow；
 2. 完善写入失败、dirty repo、stale cache 和 commit failure 体验；
-3. 加固 doctor、managed process lifecycle 和 App 发布；
+3. 加固 doctor、ReviewService 告警和 App 发布；
 4. 继续观察 Runtime，发布回退通过版本回退完成；
 5. 保持 API、Agent 和 Web fallback 契约稳定。
 
@@ -644,14 +657,14 @@ Mac 可以启动 API 和 Agent，但进程生命周期、日志消费、退出�
 1. Vault → App Object Mapping；
 2. Object ID、Version、Citation 和 Source Span；
 3. Provenance；
-4. Writeback 权限与事务模型；
+4. 扩展 Writeback provenance 与草稿升级模型；
 5. Incremental Index；
 6. Semantic Projection；
 7. Today / New；
 8. Changed / Relevant / Needs Attention；
 9. Decision / WatchCondition；
 10. Investment Living Thesis 深化；
-11. 受控的 Agent durable write 和 scheduled run。
+11. 将投资场景的 scheduled run 经验推广到其他已批准场景。
 
 Agent Runtime 基础已经提前完成，因此近期重点不是继续扩大 Agent 自主权，而是补齐它上方的业务边界和下方的安全写回接口。
 
@@ -677,9 +690,10 @@ ProvenanceService
 
 当前映射：
 
-- `AssetStore + finance-writes` 已承担部分 VaultService / WritebackService；
+- `AssetStore + operation-specific writers` 已承担 VaultService / WritebackService 的当前实现；
 - finance cache builder 已承担特定领域 IndexService；
 - `personal-agent` 已承担 AgentRuntime 和 Agent Application；
+- ReviewService 已承担投资场景的持久化 scheduled run；
 - 其他服务仍是目标边界，不应在文档中标记为已实现。
 
 ## 18. 架构验收标准
