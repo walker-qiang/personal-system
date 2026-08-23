@@ -133,7 +133,7 @@ SQLite 是近期历史和产品体验，不是 durable source of truth。进入 
 - 增加历史展示、重新测算和删除。
 - 增加显式固定到 Vault 的受控操作。
 
-当前状态（2026-08-23）：本地自动历史、request hash 去重、详情、重新测算和删除已完成；固定到 Vault 尚未实施。
+当前状态（2026-08-23）：本地自动历史、request hash 去重、详情、重新测算、删除和市场测算固定到 Vault 已完成；固定结果写入标的 `return-analysis/`。
 
 ### Phase 3：研究卡迁移
 
