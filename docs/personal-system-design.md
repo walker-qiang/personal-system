@@ -2,7 +2,7 @@
 
 > 文档状态：Canonical Architecture Baseline
 >
-> 基线日期：2026-08-21
+> 基线日期：2026-08-23
 >
 > 适用范围：`personal-system`、`personal-assets`、`personal-os`、`personal-agent`、`personal-tools`
 >
@@ -261,6 +261,15 @@ Adapters: SQLite / Files / Git / Model / Tools
 - App 展示投影。
 
 Projection 必须记录来源文件、版本和必要的 source span，不能成为隐形事实源。
+
+### 7.2.1 投研标的优先组织
+
+`personal-assets/财富/投研/标的/<target_id>/` 是单个投资对象长期信息的权威聚合目录。profile、官方报告、研究卡、收益分析快照、标的估值和事件按稳定标的 ID 归档。
+
+观察池、同业组、基金池、组合复盘、模板和投资政策属于跨标的内容，继续保留在外层。`personal-os` 的全局研究列表、消息、搜索、日期视图和比较视图由 SQLite/cache 聚合，不通过复制 Vault 文件实现。
+
+迁移遵循“读新旧、只写新、禁止双写”。移动现有研究卡前必须先让稳定记录 ID 与文件路径解耦。完整设计和迁移顺序见
+[`2026-08-23-target-centric-investment-information-architecture-design.md`](plans/2026-08-23-target-centric-investment-information-architecture-design.md)。
 
 ### 7.3 Operational Runtime State
 

@@ -18,10 +18,12 @@
 
 ## 子系统设计
 
-1. [personal-agent 系统架构](../personal-agent/docs/architecture.md)
-2. [Agent Runtime 与质量门禁](../personal-agent/docs/quality-gate-plan.md)
-3. [投研数据层自动化闭环设计](plans/2026-08-21-personal-assets-automated-investment-research-loop-design.md)
-4. [架构边界收口设计与实施](plans/2026-08-21-personal-system-architecture-boundary-hardening-design.md)
+1. [标的优先的投研信息架构设计](plans/2026-08-23-target-centric-investment-information-architecture-design.md)
+2. [研究卡标的目录迁移 Dry-run](plans/2026-08-23-research-card-target-migration-dry-run.md)
+3. [personal-agent 系统架构](../personal-agent/docs/architecture.md)
+4. [Agent Runtime 与质量门禁](../personal-agent/docs/quality-gate-plan.md)
+5. [投研数据层自动化闭环设计](plans/2026-08-21-personal-assets-automated-investment-research-loop-design.md)
+6. [架构边界收口设计与实施](plans/2026-08-21-personal-system-architecture-boundary-hardening-design.md)
 
 ## 归档文档
 
