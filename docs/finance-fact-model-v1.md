@@ -44,19 +44,22 @@ Rules:
 
 ### Snapshot
 
-A snapshot is an observed valuation of one asset at one date.
+A snapshot is an observed valuation of one asset at one timestamp. `snapshot_date`
+keeps the business date for reporting; `observed_at` records the precise
+observation time.
 
 Rules:
 
 - Snapshot records are append-only by default.
-- The latest effective snapshot per asset is the current holding.
+- The latest effective snapshot per asset by `observed_at` is the current holding.
 - `market_value` is the durable valuation fact.
 - `source.method` is required.
 - `quantity`, `unit_price`, and `cost_basis` are optional supporting fields.
 
 Effective-state rule:
 
-- For a given `asset_id + snapshot_date`, there should be one effective head.
+- Multiple observations for the same `asset_id + snapshot_date` are allowed.
+- For a given `asset_id + observed_at`, there should be one effective head.
 - If a snapshot corrects another snapshot, the correction chain tail is the effective record.
 - If a chain branches, repository validation should fail.
 - If a snapshot is voided, it is excluded from effective projections.
