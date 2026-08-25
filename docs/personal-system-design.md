@@ -137,6 +137,7 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 
 产品和 API 边界，当前负责：
 
+- 当前安装节点的用户与产品会话；
 - macOS 筋斗云主客户端；
 - Go API；
 - finance cache 和确定性计算；
@@ -145,11 +146,13 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 - 持久化自动投研 ReviewService、任务状态和失败退避；
 - Memory/Skill operation-specific Vault API；
 - AssetStore 写入协议；
-- Agent HTTP/SSE 代理；
+- Agent Gateway，以及面向 Agent 的受控 Tool Provider；
+- 当前用户的 MCP 配置与外部能力编排；
 - doctor、smoke 和本地运行管理；
 - 冻结的 Web fallback。
 
 `personal-os` 不导入 Agent Runtime Core，也不读取 Agent Runtime SQLite。
+`personal-os` 是用户、业务领域和 durable write 的拥有者；Agent 只是被调用的执行能力。
 
 ### 4.4 `personal-agent`
 
@@ -163,13 +166,33 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 - Provider、Tool、MCP 和 Skill 适配；
 - 面向 App 的 HTTP/SSE 契约。
 
-它不拥有 finance facts、知识事实或用户最终判断。任何未来 durable 写入都必须经过 `personal-os` 的受控写回边界。
+其中 Runtime Core 只依赖自己的 domain、ports 和通用 adapters，不知道用户、
+finance、research 或 `personal-os` 的业务对象。Agent Application 可以接收
+不透明的 `principal_ref`、`session_ref`、执行策略和工具上下文，用于运行态
+关联、审计和恢复，但不拥有用户体系。
+
+`personal-agent` 不拥有 finance facts、知识事实、用户最终判断、用户配置或
+durable write。任何 durable 写入都必须经过 `personal-os` 的受控写回边界。
+现有 `tools/adapters/personal_os.py` 中的 `personal_os.*` 工具定位为过渡期的远程 Tool Provider connector，不应向
+Runtime Core 反向扩散产品语义。
 
 ### 4.5 `personal-tools`
 
 可复用工具、MCP Server、脚本和自动化仓，负责提供能力，不负责定义产品事实源或应用业务边界。
 
-### 4.6 入口层
+### 4.6 Agent Gateway 与 Tool Provider
+
+`personal-os` 与 `personal-agent` 之间允许存在一个受控的运行时回调，但必须
+区分“协议依赖”和“领域依赖”：
+
+- `personal-os` 通过 Agent Gateway 调用 `personal-agent`；
+- `personal-agent` 只依赖通用 `ToolExecutorPort` / Tool Provider 协议；
+- Finance、Research、用户配置和 durable write 工具由 `personal-os` 提供；
+- Agent 通过请求级工具清单和受控回调使用这些工具；
+- Runtime Core 不直接导入 `personal-os`，不拼接产品 API，不读取 Vault；
+- Tool Provider 不得再次触发同一 Agent operation，避免递归调用。
+
+### 4.7 入口层
 
 多个入口可以共存：
 
@@ -200,18 +223,21 @@ flowchart TD
     FC --> AS["AssetStore"]
     AS --> VAULT["personal-assets Vault"]
 
-    API -->|"JWT + HTTP/SSE"| AGENT["personal-agent :7101"]
+    API -->|"JWT + HTTP/SSE"| GATEWAY["Agent Gateway"]
+    GATEWAY --> AGENT["personal-agent :7101"]
     AGENT --> LG["LangGraph Application Orchestration"]
     LG --> RT["Independent Agent Runtime Core"]
     RT --> RS["Runtime SQLite"]
-    RT --> TOOLS["Model / Tool Ports"]
-    TOOLS -->|"只读或受控 API"| API
+    RT --> TOOLS["Generic Tool Provider Port"]
+    TOOLS -->|"受控运行时回调"| TP["personal-os Tool Provider"]
+    TP --> FC
+    TP --> REVIEW
 
     OBS --> VAULT
     VAULT -->|"rebuild"| FDB
 ```
 
-当前 API 和 Agent 由 launchd supervisor 持续运行，macOS App 是可退出的产品客户端；关闭窗口不停止自动投研。系统同一时刻只面向一个登录用户，但允许不同时间由不同用户登录。会话和 Runtime operation 使用 `owner_id` 隔离；Vault 仍是该安装节点的个人资产边界，不按公共 SaaS 多租户设计。
+当前 API 和 Agent 由 launchd supervisor 持续运行，macOS App 是可退出的产品客户端；关闭窗口不停止自动投研。系统同一时刻只面向一个登录用户，但允许不同时间由不同用户登录。会话和 Runtime operation 使用不透明的 `owner_id` / `session_id` 做运行态关联；Vault 仍是该安装节点的个人资产边界，不按公共 SaaS 多租户设计。
 
 ## 6. 严格依赖方向
 
@@ -233,12 +259,14 @@ Adapters: SQLite / Files / Git / Model / Tools
 
 1. macOS App 不复制 finance 或 Agent 领域逻辑；
 2. Web 和 App 只调用 API；
-3. `personal-os` 通过 HTTP/SSE 使用 `personal-agent`，不导入其 Python 内核；
+3. `personal-os` 通过 Agent Gateway 使用 `personal-agent`，不导入其 Python 内核；
 4. LangGraph 可以依赖 Runtime Adapter，Runtime Core 不理解 LangGraph、DAG 或 App；
 5. Runtime Core 只依赖自己的 domain 和 ports；
 6. SQLite、模型和工具实现位于 adapters，不能被 domain 反向引用；
 7. `personal-agent` 不能绕过 API/AssetStore 直接写 durable Vault；
-8. `personal-assets` 不依赖任何应用或 Runtime。
+8. Finance、Research 和用户相关业务工具由 `personal-os` Tool Provider 提供；
+9. Runtime Core 不直接依赖 `personal-os` 的业务 API；回调只存在于协议 adapter；
+10. `personal-assets` 不依赖任何应用或 Runtime。
 
 ## 7. 数据权威与生命周期
 
@@ -582,7 +610,8 @@ Spaces
 - Debug Trace 默认临时、短期、脱敏，不作为个人长期记忆；
 - durable 写入可审计、可逆；
 - 高风险操作必须确认；
-- App、API 和 Agent 之间保留 owner identity；
+- App、API 和 Agent 之间保留不透明 owner identity；
+- 当前单用户节点不建设多租户权限体系；用户级配置仍属于 `personal-os`；
 - Runtime effect 必须先记录 intent，再执行外部副作用。
 
 账号、口令、恢复码、Token、私钥和 API Key 不是普通知识对象，需要更严格策略。
@@ -745,7 +774,8 @@ ProvenanceService
 12. Cache、Index 和 Projection 不进入长期事实源。
 13. Cloud 是可信节点，不是中央数据库。
 14. 不为尚未发生的多用户并发设计分布式系统。
-15. 任何范围扩大都需要新的明确设计和确认。
+15. Runtime Core 不得引入 personal-os、Finance、Research 或用户业务依赖。
+16. 任何范围扩大都需要新的明确设计和确认。
 
 ## 20. 最终摘要
 
@@ -754,10 +784,10 @@ personal-assets
 = 我的长期个人资产是什么
 
 personal-os
-= 我每天如何浏览、输入、分析和使用这些资产
+= 我每天如何浏览、输入、分析、配置并写回这些资产
 
 personal-agent
-= AI 如何在可恢复、可审计、受约束的 Runtime 中工作
+= AI 如何在可恢复、可审计、受约束的通用 Runtime 中工作
 
 personal-tools
 = 系统可以复用哪些外部能力
