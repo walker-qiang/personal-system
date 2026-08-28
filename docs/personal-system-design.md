@@ -149,7 +149,6 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 - Agent Gateway，以及面向 Agent 的受控 Tool Provider；
 - 当前用户的 MCP 配置与外部能力编排；
 - doctor、smoke 和本地运行管理；
-- 冻结的 Web fallback。
 
 `personal-os` 不导入 Agent Runtime Core，也不读取 Agent Runtime SQLite。
 `personal-os` 是用户、业务领域和 durable write 的拥有者；Agent 只是被调用的执行能力。
@@ -199,7 +198,6 @@ Runtime Core 反向扩散产品语义。
 - macOS 筋斗云：日常产品主入口；
 - Obsidian：Vault 的深度浏览与人工编辑入口；
 - Codex / Trae：复杂维护、设计和深度操作入口；
-- Web fallback：诊断、兼容和 E2E；
 - Capture 工具：未来的外部信息入口。
 
 所有入口必须共享同一 Durable Asset Layer 和受控写入协议。
@@ -213,7 +211,6 @@ flowchart TD
 
     MAC -->|"HTTP"| API["personal-os Go API :7001"]
     MAC -->|"Agent 请求经 API"| API
-    WEB["Frozen Web fallback"] --> API
 
     API --> FC["Finance Core / Cache / Writes"]
     API --> REVIEW["ReviewService / reviews.sqlite"]
@@ -686,7 +683,7 @@ API 和 Agent 已由 launchd supervisor 持续运行，App 退出不停止 Revie
 2. 完善写入失败、dirty repo、stale cache 和 commit failure 体验；
 3. 加固 doctor、ReviewService 告警和 App 发布；
 4. 继续观察 Runtime，发布回退通过版本回退完成；
-5. 保持 API、Agent 和 Web fallback 契约稳定。
+5. 保持 API、Agent 和 macOS App 契约稳定。
 
 ### Track B：长期 Intelligence 基础
 

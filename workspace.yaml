@@ -65,7 +65,7 @@ migration_sources:
     current_path: archived (historical path was /Users/liqiang/code/personal-web)
     status: archived
     final_state: archived
-    migrated_into: personal-os/apps/web
+    migrated_into: personal-os macOS App
 top_level_tracked_areas:
   - docs
   - tools
