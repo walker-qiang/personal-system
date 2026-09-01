@@ -28,16 +28,16 @@
 
 它们后续应按跨标的系统设计内容单独归类，不能放入某个标的目录。
 
-建议允许执行迁移，但先保留以下两个非阻塞缺口：
+迁移已执行，仍保留以下两个非阻塞缺口：
 
 - `sh600585` 海螺水泥没有 `profile.yaml`。
 - `sz000651` 格力电器没有 `profile.yaml`。
 
 迁移不应为了补目录结构而编造 profile。两者可以先只有 `research/`，后续通过已有官方事实 materialize 流程补 profile。
 
-## 2. 迁移动作
+## 2. 实际执行的迁移动作
 
-每张研究卡执行两项变更：
+已对每张研究卡执行两项变更：
 
 1. 在 YAML frontmatter 的 `schema_version` 后加入原 legacy ID：
 
@@ -191,15 +191,15 @@ record_id: <legacy_record_id>
 
 App、消息中心和 Agent research context 使用稳定 `record_id`，不以文件路径作为业务身份。双路径读取已经部署，迁移过程中不会出现读取空窗。
 
-## 6. 执行顺序
+## 6. 执行记录
 
-1. 再次校验 8 个源文件 SHA256 与本报告一致。
-2. 为每个文件注入对应 legacy `record_id`。
-3. 使用 Git rename 移动到目标目录。
-4. 运行 repository 读取校验，要求总记录数仍为 8。
-5. 校验 8 个 record ID 与迁移前完全一致。
-6. 校验标的详情、消息中心和 Agent research context。
-7. 只提交本次 8 个文件的移动与内容变更。
+1. 已校验 8 个源文件 SHA256 与本报告一致。
+2. 已为每个文件注入对应 legacy `record_id`。
+3. 已使用 Git rename 移动到目标目录。
+4. 已运行 repository 读取校验，总记录数仍为 8。
+5. 已校验 8 个 record ID 与迁移前完全一致。
+6. 已校验标的详情、消息中心和 Agent research context。
+7. 已只提交本次 8 个文件的移动与内容变更，commit 为 `47cd12a`。
 
 ## 7. 回滚
 
@@ -211,9 +211,9 @@ App、消息中心和 Agent research context 使用稳定 `record_id`，不以�
 2. `personal-os` 继续通过双路径 repository 读取旧目录。
 3. 不进行反向复制或保留新旧两份文件。
 
-## 8. 执行门槛
+## 8. 执行门槛（已通过）
 
-执行前需要用户确认：
+执行前需要用户确认的事项均已确认：
 
 - 接受海螺水泥和格力电器暂时没有 `profile.yaml`。
 - 接受忽略未跟踪的 `.obsidian/workspace.json` 路径缓存。

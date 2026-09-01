@@ -2,17 +2,33 @@
 
 ## Purpose
 
-`AssetStore` is the single write and sync protocol for `personal-assets`.
+`AssetStore` is the shared safety and write protocol for `personal-assets`.
 
-It exists because the system has many entry points: Web UI, Web Agent, Codex, Trae, cloud node, capture tools, and future automation. These entry points must not each invent their own Git behavior.
+The current product entry points are the `personal-os` macOS App and HTTP API,
+`personal-agent`, engineering agents such as Codex/Trae, and controlled local
+tools. The old Web UI has been retired from the current application tree;
+legacy read API compatibility remains. Cloud nodes, capture tools, and
+additional automation are possible future entry points. None of these entry
+points should invent its own Git behavior.
 
-Every durable write should go through the same lifecycle:
+Every durable write shares the same lock, repository, path, and conflict
+boundary. Remote sync, remote publication, and cache rebuilding are selected
+by the operation:
 
 ```text
-sync check -> validate -> prepare audit -> write -> validate repository -> commit -> push -> rebuild caches -> runtime log
+lock -> preflight -> validate -> write -> validate repository -> commit
+  -> optional remote sync/publication -> optional cache rebuild -> runtime log
 ```
 
-`AssetStore` can be implemented as a library, local service, CLI, or internal package. The implementation shape may change; the protocol should stay stable.
+Publish-enabled finance and Vault operations use remote preflight and
+`CommitAndPush`; the research-card writer uses repository preflight and a local
+`Commit`, without pushing or rebuilding the finance cache. The operation
+contract therefore determines which optional steps are required.
+
+The current implementation is a set of Go packages used by API-owned
+operations. There is no standalone `personal-os` CLI or AssetStore service.
+A future CLI or local service may reuse the same protocol, but the protocol
+should stay stable when the delivery shape changes.
 
 ## Non-goals
 
@@ -29,23 +45,26 @@ Its job is narrower: coordinate safe local writes to a Git-backed personal asset
 ## Core Responsibilities
 
 1. Locate and validate the `personal-assets` checkout.
-2. Coordinate Git fetch, pull, commit, and push.
+2. Coordinate Git fetch, fast-forward, commit, and optional push when the
+   operation publishes to an upstream.
 3. Enforce path and schema rules for each operation type.
 4. Prevent concurrent local writes through locking.
 5. Keep durable facts in Git-friendly files.
-6. Rebuild local caches after successful sync/write.
+6. Rebuild the affected local cache or projection when the operation owns one.
 7. Surface conflicts clearly.
 8. Record minimal audit logs.
 
 ## System Boundary
 
 ```text
-Entry Points
-  - Web UI
-  - Web Agent
+Current Entry Points
+  - personal-os macOS App -> personal-os HTTP API
+  - personal-agent
   - Codex / Trae
-  - Capture tools
-  - Cloud Web
+  - Controlled local tools
+
+Future Entry Points
+  - Future capture tools, cloud nodes, and automation
         |
         v
 AssetStore
@@ -60,6 +79,9 @@ AssetStore
         v
 personal-assets Git checkout
 ```
+
+The retired Web client is historical context, not a currently runnable
+AssetStore entry point.
 
 All entry points may read through caches for speed, but durable writes should pass through `AssetStore`.
 
@@ -120,8 +142,11 @@ Recommended initial operation types:
 | `knowledge.ingest` | Source-backed synthesis | `知识/**`, `财富/审计/**` when finance-related |
 | `finance.asset.upsert` | Create/update asset master data | `财富/资产/**` |
 | `finance.snapshot.create` | Append asset snapshot | `财富/快照/**` |
+| `finance.snapshot.correct` | Append replacement snapshot | `财富/快照/**` |
+| `finance.snapshot.void` | Void an effective snapshot | `财富/作废/**` |
 | `finance.transaction.create` | Append transaction | `财富/交易/**` |
-| `finance.fact.void` | Void an invalid snapshot or transaction | `财富/作废/**` |
+| `finance.transaction.correct` | Append replacement transaction | `财富/交易/**` |
+| `finance.transaction.void` | Void an effective transaction | `财富/交易作废/**` |
 | `finance.target.update` | Update allocation targets | `财富/targets.yaml` |
 | `report.create` | Create analysis/report output | `项目/**`, `财富/报表/**` |
 | `skill.update` | Update reusable AI workflows | `技能/**` |
@@ -137,11 +162,16 @@ Rules:
 
 - Normal nodes should write to the primary branch.
 - Background sync uses fast-forward only.
-- Write-time sync fetches remote state and pulls fast-forward updates before writing when possible.
-- If the local branch is ahead, a write may proceed and push.
+- Publish-enabled writes fetch remote state and pull fast-forward updates before
+  writing when possible.
+- If the local branch is ahead, a publish-enabled write may proceed and push.
 - If the local and remote branches have diverged, stop and ask for manual resolution.
 - No force push in normal operation.
-- Feature branches are allowed for deliberate Codex/Trae restructures, but product writes from Web/API/Agent should not create ad hoc branches.
+- Local-only operations may commit without a configured upstream or without a
+  remote publication step.
+- Feature branches are allowed for deliberate Codex/Trae restructures, but
+  product writes from macOS App/API/Agent clients should not create ad hoc
+  branches.
 
 This keeps routine writes simple while still allowing Codex/Trae to use branches for deliberate large changes when needed.
 
@@ -149,12 +179,12 @@ This keeps routine writes simple while still allowing Codex/Trae to use branches
 
 Reads should be fast, but must expose freshness.
 
-Recommended policy:
+Target policy (not every current consumer exposes every option yet):
 
-1. Web pages read from local cache by default.
+1. Product clients read through API projections backed by local caches by default.
 2. Cache metadata includes source commit SHA and rebuild time.
 3. Background sync can fetch/pull and rebuild caches when clean.
-4. A page that needs latest state can request `sync_mode=latest`, which attempts a safe sync first.
+4. A consumer that needs latest state can request `sync_mode=latest`, which attempts a safe sync first.
 5. If sync is blocked, the read can still return cached data with `stale=true` and a reason.
 
 Example read status:
@@ -205,20 +235,21 @@ The UI should show sync state rather than hiding it:
 
 ## Write Protocol
 
-Every durable write follows this state machine.
+Every durable write follows this common state machine; bracketed states are
+operation-dependent.
 
 ```text
 requested
   -> lock_acquired
   -> preflight_checked
-  -> sync_checked
+  -> [remote_sync_checked]
   -> operation_validated
   -> audit_prepared
   -> files_written
   -> repo_validated
   -> committed
-  -> pushed
-  -> caches_rebuilt
+  -> [pushed]
+  -> [caches_rebuilt]
   -> runtime_logged
   -> completed
 ```
@@ -232,16 +263,19 @@ Detailed steps:
 2. **Preflight**
    - Verify repo exists.
    - Verify current branch.
-   - Verify remote is configured.
+   - Verify remote is configured when the operation requires publication.
    - Verify no unresolved merge state.
    - Verify path policy for the operation type.
 
 3. **Sync check**
    - `git fetch`.
    - If worktree is clean and behind remote, pull fast-forward updates.
-   - If branch is ahead of remote, continue; the later push will publish the local commit.
+   - If branch is ahead of remote, continue; a later push publishes the local
+     commit only for a publish-enabled operation.
    - If branch has diverged, stop and ask for manual resolution.
-   - If worktree is dirty, reject by default for v1.
+   - Unrelated unstaged changes may remain for path-scoped writes. Staged
+     changes anywhere in the repository are rejected, and a conflict in a
+     declared target path is rejected or surfaced by the structured merge.
 
 4. **Validate operation input**
    - Validate schema.
@@ -265,10 +299,11 @@ Detailed steps:
    - Commit with structured message.
    - Include actor and operation metadata.
 
-8. **Push**
-   - Push to remote.
+8. **Push when required**
+   - Push to the configured upstream for publish-enabled operations.
    - If rejected because remote changed, fetch and fast-forward if possible, then retry once.
    - If branches have diverged, stop. Do not force push.
+   - Local-only operations finish after commit.
 
 9. **Rebuild caches**
    - Rebuild affected indexes/cache for local node.
@@ -351,11 +386,13 @@ Conflict cases:
 
 | Case | Behavior |
 |---|---|
-| Worktree dirty before write | Reject v1 write; show dirty paths |
+| Unrelated unstaged change | Allow path-scoped write; commit only declared paths |
+| Staged change anywhere | Reject write; do not include existing staged content |
+| Declared target path conflict | Reject or return a structured merge conflict |
 | Remote updated before write | Fast-forward pull before writing |
 | Local branch ahead | Allow write and push |
 | Branches diverged | Stop and ask for manual Git resolution |
-| Push rejected after commit | Fetch, fast-forward if possible, retry once |
+| Push rejected after commit | Re-check remote safety; retry once only if branches are not diverged |
 | Schema validation failure | Abort before commit |
 | Cache rebuild failure after commit | Keep commit, mark cache degraded |
 | Cloud auth failure | Abort before write |
@@ -412,7 +449,7 @@ Initial cache types:
 
 | Cache | Built From | Used By |
 |---|---|---|
-| Finance SQLite | `财富/**` facts | Web tables, analytics, AI tools |
+| Finance SQLite | `财富/**` facts | macOS App/API responses, analytics, Agent tools |
 | Wiki full-text index | `知识/**`, `技能/**` | Search and retrieval |
 | Attachment metadata | `附件/**` | Capture/preview UI |
 | Optional vector index | curated `知识/` and `资料/` subsets | Semantic retrieval |
@@ -465,7 +502,8 @@ Rules:
 - AI durable knowledge writes should include source refs.
 - AI writes involving L3 source material require the privacy policy to allow the model path.
 - High-risk writes should create drafts or reports, not overwrite durable knowledge directly.
-- Web Agent starts with read-only, then low-risk writes, then structured writes.
+- Any future product-facing Agent write path should start read-only, then add
+  low-risk operations, then explicit structured writes.
 
 ## Minimal API Shape
 
@@ -496,6 +534,10 @@ The actual API can be HTTP, CLI, or library calls. The conceptual request should
   }
 }
 ```
+
+The example above is a publish-enabled finance operation. A local-only
+operation can omit remote publication, and an operation that does not own a
+cache can omit cache rebuilding.
 
 Response:
 
@@ -534,7 +576,13 @@ Error response:
 
 ## CLI Surface
 
-Useful commands for development and operations:
+Status: target interface, not currently implemented. The repository does not
+provide a `personal-os` CLI binary or the `sync` and `assetstore` subcommands
+below. Current product operations are exposed through the HTTP API and shared
+Go packages; readiness and cache rebuilds have separate Go tool entry points at
+`tools/doctor` and `tools/cache-builders/finance`.
+
+The following commands are retained as a possible future operator interface:
 
 ```bash
 personal-os sync status
@@ -547,7 +595,8 @@ personal-os assetstore validate
 personal-os assetstore audit --since 2026-05-01
 ```
 
-The Web UI and Agent should call the same underlying implementation as the CLI.
+Any future CLI should call the same Go implementation as the HTTP API and Agent
+integrations.
 
 ## Testing Strategy
 
@@ -555,27 +604,36 @@ Tests should focus on failure modes, not only happy paths.
 
 Required scenarios:
 
-1. Clean write creates expected file, commit, push, and cache rebuild.
-2. Dirty worktree rejects write.
-3. Remote update is pulled before write.
-4. Local branch ahead can push.
-5. Diverged branches stop without force push.
-6. Invalid finance snapshot fails before commit.
-7. Operation cannot modify disallowed path.
-8. Cache rebuild failure is reported without corrupting source facts.
-9. Cloud write requires actor/auth metadata.
-10. AI knowledge ingest requires source refs.
+1. A publish-enabled clean write creates the expected file, commit, optional
+   push, and owned cache rebuild.
+2. An unrelated unstaged change is preserved and excluded from the operation
+   commit.
+3. A staged change, merge state, or declared target-path conflict rejects the
+   write.
+4. A remote update is pulled before a publish-enabled write when fast-forward is
+   safe.
+5. A local branch ahead can publish when an upstream is configured.
+6. Diverged branches stop without force push or automatic merge.
+7. An invalid finance snapshot fails before commit.
+8. An operation cannot modify a disallowed path.
+9. A local-only research-card write creates a local commit without a push or
+   finance cache rebuild.
+10. Cache rebuild failure is reported without corrupting source facts.
+11. Cloud write requires actor/auth metadata.
+12. AI knowledge ingest requires source refs.
 
-## Implementation Recommendation
+## Implementation Status and Remaining Sequence
 
-Implement the protocol in stages:
+The original staged recommendation has partially landed in a different order:
 
-1. Local CLI and library only.
-2. Finance snapshot write path.
-3. Cache rebuild from `finance/**`.
-4. Web API integration.
-5. Knowledge/capture operations.
-6. Cloud node writes.
-7. Agent write permissions.
+1. **Implemented:** shared Go packages and API-owned AssetStore operations.
+2. **Implemented:** structured asset, snapshot, transaction, allocation target,
+   research-card, official-fact, watchlist, and bounded Vault writes.
+3. **Implemented:** finance cache rebuild from `财富/**`.
+4. **Implemented:** HTTP API integration and the macOS product client.
+5. **Not implemented:** a standalone AssetStore CLI or local service.
+6. **Not implemented:** generic knowledge/capture operations, cloud-node writes,
+   or a generic Agent write-permission system.
 
-Do not start with a generic file editor. Start with one validated structured write path.
+Future work should continue to add validated structured operations instead of a
+generic file editor.

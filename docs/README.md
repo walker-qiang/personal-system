@@ -5,8 +5,9 @@
 ## 首要入口
 
 1. [personal-system 最新设计](personal-system-design.md)：当前唯一的全局 canonical 架构基线。
-2. [personal-os V1 迁移边界](../personal-os/docs/migration-boundary.md)：约束当前产品实现范围。
-3. [目标项目进度](project-progress.md)：各长期仓库和迁移来源的当前状态。
+2. [personal-system 架构图](architecture-diagrams.md)：全景、运行拓扑、`personal-agent`、`personal-os` 和写回时序。
+3. [personal-os V1 迁移边界](../personal-os/docs/migration-boundary.md)：约束当前产品实现范围。
+4. [目标项目进度](project-progress.md)：各长期仓库和迁移来源的当前状态。
 
 长期目标不自动扩大 V1：当前 `personal-os` 是投资快照、投研数据和个人助理工作台；broader knowledge 主要通过 Obsidian 维护。
 

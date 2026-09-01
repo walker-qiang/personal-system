@@ -1,0 +1,79 @@
+%%{init: {"theme": "base", "sequence": {"useMaxWidth": true, "wrap": true, "diagramMarginX": 20, "diagramMarginY": 16, "actorMargin": 38, "messageMargin": 30}, "themeVariables": {"fontFamily": "Arial, PingFang SC, sans-serif", "lineColor": "#64748b", "textColor": "#172033", "actorBkg": "#f8fafc", "actorBorder": "#64748b", "actorTextColor": "#172033", "signalColor": "#475569", "signalTextColor": "#172033", "labelBoxBkgColor": "#f1f5f9", "labelBoxBorderColor": "#94a3b8", "noteBkgColor": "#fff7d6", "noteBorderColor": "#d97706"}}}%%
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant Mac as macOS App
+    participant OS as personal-os API
+    participant Agent as Agent Application
+    participant Runtime as Runtime Core
+    participant Tools as Tool Registry / Adapters
+    participant Cache as finance.sqlite
+    participant Store as AssetStore
+    participant Vault as personal-assets
+
+    alt 只读 Agent 工具调用
+        User->>Mac: 提交问题
+        Mac->>OS: POST /api/agent/chat
+        OS->>Agent: JWT + HTTP/SSE + 用户上下文
+        Agent->>Runtime: RunRequest + read_only policy
+        Runtime->>Tools: 调用 allowlisted read-only tool
+        alt finance.* 兼容工具
+            Tools->>Cache: SQLite read-only query
+            Cache-->>Tools: 确定性 Finance projection
+        else personal_os.* 工具
+            Tools->>OS: GET /api/tools/*
+            OS-->>Tools: 领域结果与来源元数据
+        end
+        Tools-->>Runtime: Tool result
+        Runtime-->>Agent: 最终结果与 Runtime events
+        Agent-->>OS: SSE events
+        OS-->>Mac: 流式展示
+        Mac-->>User: 结果与可检查依据
+    else Runtime writeback：plan -> approval -> execute
+        User->>Mac: 提交写回意图
+        Mac->>OS: POST /api/agent/chat
+        OS->>Agent: JWT + HTTP/SSE + writeback policy
+        Agent->>Runtime: RunRequest + allow_external_effects
+        Runtime->>Tools: writeback.prepare
+        Tools->>OS: POST /api/writeback/plan
+        OS->>Store: 校验、预检、读取 Vault precondition
+        Store-->>OS: preview + plan hash
+        OS-->>Tools: 结构化 plan
+        Tools-->>Runtime: plan result
+        Runtime->>Runtime: 模型请求 writeback.execute_plan
+        Runtime-->>Agent: approval_required，尚未执行 Tool
+        Agent-->>OS: SSE approval event
+        OS-->>Mac: 展示 plan 与风险
+        User->>Mac: 明确批准
+        Mac->>OS: chat/confirm
+        OS->>Agent: 恢复审批
+        Agent->>Runtime: resume operation
+        Runtime->>Tools: writeback.execute_plan
+        Tools->>OS: POST /api/writeback/execute
+        OS->>Store: 校验 plan、加锁、限定路径
+        Store->>Vault: durable write + scoped Git commit
+        Vault-->>Store: commit / optional push 结果
+        Store-->>OS: operation result
+        OS-->>Tools: writeback result
+        Tools-->>Runtime: effect settled
+        Runtime-->>Agent: 完成事件与审计摘要
+        Agent-->>OS: SSE done
+        OS-->>Mac: 最终状态
+        Mac-->>User: 展示写回结果
+    else Memory / Skill durable mutation
+        User->>Mac: 提交 Memory / Skill 操作
+        Mac->>OS: Agent session / memory request
+        OS->>Agent: 代理到 operation-specific route
+        Agent->>Tools: Vault Client
+        Tools->>OS: PUT/POST /api/vault/*
+        OS->>Store: operation-specific validation + AssetStore
+        Store->>Vault: durable write + scoped Git commit
+        Vault-->>Store: commit / push 结果
+        Store-->>OS: operation result
+        OS-->>Agent: Vault API result
+        Agent-->>OS: route response
+        OS-->>Mac: 操作结果
+        Mac-->>User: 展示状态
+    end
+
+    Note over Runtime,Vault: Runtime approval 只约束 writeback.execute_plan；Memory / Skill mutation 走独立 Vault API，但两者都不能绕过 personal-os 与 AssetStore

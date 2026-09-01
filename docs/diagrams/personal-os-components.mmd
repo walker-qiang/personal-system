@@ -1,0 +1,93 @@
+%%{init: {"theme": "base", "flowchart": {"curve": "basis", "htmlLabels": true, "nodeSpacing": 26, "rankSpacing": 38}, "themeVariables": {"fontFamily": "Arial, PingFang SC, sans-serif", "lineColor": "#64748b", "textColor": "#172033"}}}%%
+flowchart TB
+    USER["当前用户"]:::person
+
+    subgraph MAC["apps/mac：筋斗云 macOS App"]
+        direction LR
+        VIEWS["SwiftUI Views<br/>Today / Finance / Research / Agent"]:::client
+        MODEL["AppModel / Models<br/>界面状态与导航"]:::client
+        CLIENT["APIClient / BackendManager<br/>HTTP、SSE、服务状态"]:::client
+        VIEWS --> MODEL --> CLIENT
+    end
+
+    subgraph API["apps/api：Go API :7001"]
+        direction LR
+        ROUTER["HTTP Router<br/>/api/finance / investment / agent / vault / today"]:::api
+        READAPI["Query handlers<br/>Finance / Investment / Today / System"]:::api
+        WRITEAPI["Durable operation handlers<br/>Finance / Research / Return pin / Vault / Writeback"]:::api
+        REVIEWS["ReviewService<br/>计划任务、恢复、退避"]:::api
+        AGENTGW["Agent Gateway<br/>稳定代理子集"]:::api
+    end
+
+    subgraph DOMAIN["Go packages：领域与协议"]
+        direction TB
+        DOMAINREAD["Query domain services"]:::domain
+        subgraph READPACKAGES["读模型与计算"]
+            direction LR
+            FINANCE["finance-core / finance-cache<br/>holdingreturns"]:::domain
+            INVEST["researchcards / researchfacts / researchstore<br/>valuationstore / fundpool / watchlist-cache"]:::domain
+            RETURNS["returnanalysis / returnhistory"]:::domain
+            BRIEFING["briefing"]:::domain
+            MARKET["marketdata / westockadapter"]:::domain
+        end
+        FINWRITES["finance-writes<br/>append / correction / void"]:::domain
+        ASSETSTORE["assetstore<br/>锁、Git 预检、限定提交"]:::store
+        DOMAINREAD --> FINANCE
+        DOMAINREAD --> INVEST
+        DOMAINREAD --> RETURNS
+        DOMAINREAD --> BRIEFING
+        DOMAINREAD --> MARKET
+    end
+
+    subgraph STATE["personal-os var/：本机运行态"]
+        direction LR
+        FINDB["cache/finance.sqlite"]:::runtime
+        REVIEWDB["automation/reviews.sqlite"]:::runtime
+        HISTORYDB["history/return-analysis.sqlite"]:::runtime
+        OTHERCACHE["briefing / research / quote caches"]:::runtime
+    end
+
+    VAULT["personal-assets Git Vault<br/>Durable Source of Truth"]:::asset
+    AGENT["personal-agent :7101<br/>通用 Agent Runtime"]:::agent
+    WESTOCK["WeStock Node CLI<br/>外部行情与研究数据"]:::external
+
+    USER --> MAC
+    CLIENT --> ROUTER
+    ROUTER --> READAPI
+    ROUTER --> WRITEAPI
+    ROUTER --> REVIEWS
+    ROUTER --> AGENTGW
+
+    READAPI --> DOMAINREAD
+    WRITEAPI --> FINWRITES
+    WRITEAPI -->|"API-owned research / return pin / Vault writes"| ASSETSTORE
+    FINWRITES --> ASSETSTORE
+    REVIEWS --> AGENTGW
+    REVIEWS -->|"研究结果持久化"| WRITEAPI
+    AGENTGW -->|"JWT + HTTP/SSE"| AGENT
+    AGENT -->|"Tool Provider / Vault / Writeback callback"| ROUTER
+
+    FINANCE --> FINDB
+    REVIEWS --> REVIEWDB
+    RETURNS --> HISTORYDB
+    INVEST --> OTHERCACHE
+    BRIEFING --> OTHERCACHE
+    VAULT -->|"rebuild / read"| FINANCE
+    ASSETSTORE -->|"operation-specific write<br/>scoped commit / optional push"| VAULT
+    MARKET --> WESTOCK
+
+    classDef person fill:#ffffff,stroke:#334155,stroke-width:2px,color:#172033;
+    classDef client fill:#ffffff,stroke:#64748b,stroke-width:1.5px,color:#172033;
+    classDef api fill:#dcebff,stroke:#2563eb,stroke-width:2px,color:#15345b;
+    classDef domain fill:#edf6ff,stroke:#3b82f6,stroke-width:1.5px,color:#15345b;
+    classDef store fill:#c9e1ff,stroke:#1d4ed8,stroke-width:3px,color:#102c50;
+    classDef runtime fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px,color:#334155;
+    classDef asset fill:#e6f6ed,stroke:#15803d,stroke-width:3px,color:#163d25;
+    classDef agent fill:#fff4d8,stroke:#d97706,stroke-width:2px,color:#5b3512;
+    classDef external fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#334155;
+
+    style MAC fill:#fbfcfe,stroke:#cbd5e1,stroke-width:1px
+    style API fill:#f7fbff,stroke:#93c5fd,stroke-width:2px
+    style DOMAIN fill:#fbfdff,stroke:#bfdbfe,stroke-width:1px
+    style READPACKAGES fill:#ffffff,stroke:#dbeafe,stroke-width:1px
+    style STATE fill:#fbfcfe,stroke:#cbd5e1,stroke-width:1px

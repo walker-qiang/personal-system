@@ -1,0 +1,88 @@
+%%{init: {"theme": "base", "flowchart": {"curve": "basis", "htmlLabels": true, "nodeSpacing": 24, "rankSpacing": 34}, "themeVariables": {"fontFamily": "Arial, PingFang SC, sans-serif", "lineColor": "#64748b", "textColor": "#172033"}}}%%
+flowchart LR
+    CLIENT["personal-os Agent Gateway<br/>JWT + HTTP/SSE"]:::external
+
+    subgraph SERVICE["Service Boundary"]
+        direction TB
+        ROUTES["FastAPI Routes<br/>chat / sessions / runtime / skills / tools"]:::service
+        BOOT["Auth / Middleware / Lifecycle<br/>stream ticket / rate limit / registry 初始化"]:::service
+    end
+
+    subgraph APP["Agent Application / Orchestration"]
+        direction TB
+        CHAT["ChatService<br/>请求、会话与 SSE 事件"]:::application
+        AGENTS["Commander + Domain Agents<br/>Registry / Presets"]:::application
+        GRAPH["LangGraph + fixed workflows<br/>plan / DAG / deep research"]:::application
+        CONTEXT["Context + Guardrails<br/>DataBus / budget / compaction / privacy"]:::application
+        KNOWLEDGE["Skills / RAG / Memory Evolution"]:::application
+    end
+
+    subgraph RUNTIME["Independent Runtime Boundary"]
+        direction TB
+        BRIDGE["Runtime Adapter<br/>Application request -> RunRequest"]:::runtime
+        CORE["Runtime Core<br/>model-tool loop<br/>operation / event / approval / effect"]:::runtimecore
+        PORTS["通用 Ports<br/>Model / ToolExecutor / Context / Store"]:::runtime
+    end
+
+    subgraph ADAPTERS["Adapters & Application Infrastructure"]
+        direction TB
+        MODELADAPTER["Model Adapter"]:::adapter
+        TOOLEXEC["ToolExecutor Adapter<br/>Tool Registry"]:::adapter
+        STORE["SQLiteRuntimeStore<br/>operation durable journal"]:::adapter
+        VAULTCLIENT["Vault Client<br/>Memory / Skill mutation"]:::adapter
+        TRACE["TraceLogger / OTel<br/>application tool trace"]:::adapter
+        RAGINDEX["RAG / embedding index"]:::adapter
+    end
+
+    PROVIDERS["LLM / Web / MCP providers"]:::external
+    OS["personal-os API<br/>Tool Provider / Vault / Writeback"]:::os
+    VAULT["personal-assets<br/>Skills / RAG / Memory projection"]:::asset
+    FINDB["shared finance.sqlite<br/>兼容只读 projection"]:::runtime_state
+    AGSTATE["personal-agent var/<br/>sessions / Runtime / checkpoints / trace / RAG"]:::runtime_state
+
+    CLIENT --> ROUTES
+    BOOT --> ROUTES
+    ROUTES --> CHAT
+    CHAT --> AGENTS
+    AGENTS --> GRAPH
+    GRAPH --> CONTEXT
+    GRAPH --> KNOWLEDGE
+    GRAPH --> BRIDGE
+    BRIDGE --> CORE
+    CORE --> PORTS
+
+    PORTS --> MODELADAPTER
+    PORTS --> TOOLEXEC
+    PORTS --> STORE
+    MODELADAPTER --> PROVIDERS
+    TOOLEXEC --> PROVIDERS
+    TOOLEXEC -->|"personal_os.* / writeback"| OS
+    OS -->|"tool / operation result"| TOOLEXEC
+    TOOLEXEC -->|"finance.* 只读"| FINDB
+    STORE --> AGSTATE
+
+    KNOWLEDGE -.->|"配置路径只读加载"| VAULT
+    KNOWLEDGE --> RAGINDEX
+    RAGINDEX --> AGSTATE
+    ROUTES -->|"Memory / Skill API"| VAULTCLIENT
+    CHAT -->|"profile sync"| VAULTCLIENT
+    VAULTCLIENT -->|"/api/vault/*"| OS
+    OS -->|"AssetStore durable write"| VAULT
+    CHAT --> TRACE
+    TOOLEXEC --> TRACE
+    TRACE --> AGSTATE
+
+    classDef external fill:#ffffff,stroke:#64748b,stroke-width:1.5px,color:#172033;
+    classDef service fill:#eef2f7,stroke:#64748b,stroke-width:1.5px,color:#253044;
+    classDef application fill:#fff7e6,stroke:#d97706,stroke-width:1.5px,color:#5b3512;
+    classDef runtime fill:#ffedbd,stroke:#b45309,stroke-width:2px,color:#4a2a0a;
+    classDef runtimecore fill:#ffd979,stroke:#92400e,stroke-width:3px,color:#3b2309;
+    classDef adapter fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#334155;
+    classDef asset fill:#e6f6ed,stroke:#15803d,stroke-width:3px,color:#163d25;
+    classDef os fill:#e8f2ff,stroke:#2563eb,stroke-width:2px,color:#15345b;
+    classDef runtime_state fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px,color:#334155;
+
+    style SERVICE fill:#fbfcfe,stroke:#cbd5e1,stroke-width:1px
+    style APP fill:#fffdf6,stroke:#fbbf24,stroke-width:2px
+    style RUNTIME fill:#fff8df,stroke:#d97706,stroke-width:2px
+    style ADAPTERS fill:#fbfcfe,stroke:#cbd5e1,stroke-width:1px

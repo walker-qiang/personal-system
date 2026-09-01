@@ -1,0 +1,84 @@
+%%{init: {"theme": "base", "flowchart": {"curve": "basis", "htmlLabels": true, "nodeSpacing": 30, "rankSpacing": 44}, "themeVariables": {"fontFamily": "Arial, PingFang SC, sans-serif", "lineColor": "#64748b", "textColor": "#172033"}}}%%
+flowchart TB
+    USER["当前登录用户"]:::person --> MAC["筋斗云 macOS App<br/>SwiftUI client"]:::client
+    SUP["launchd supervisor<br/>持续管理 API 与 Agent"]:::runtime
+
+    subgraph POS["personal-os 进程 :7001"]
+        direction LR
+        API["Go HTTP API<br/>Router / handlers"]:::os
+        DOMAIN["Finance / Investment / Today<br/>确定性领域编排"]:::os
+        REVIEW["ReviewService<br/>调度、恢复、退避"]:::os
+        AGENTGW["Agent Gateway<br/>JWT + HTTP/SSE"]:::os
+        WRITES["Operation-specific writers<br/>AssetStore"]:::os
+        MARKET["Market adapters<br/>WeStock runtime"]:::os
+    end
+
+    subgraph PA["personal-agent 进程 :7101"]
+        direction LR
+        HTTP["FastAPI / SSE"]:::agent
+        APP["Agent Application<br/>Commander / LangGraph / Skills / RAG"]:::agent
+        RT["Runtime Core<br/>operation / approval / effect<br/>durable events + ephemeral debug trace"]:::agentcore
+        ADAPTER["Application + Runtime adapters<br/>Tool Registry / Vault Client / Ports"]:::agent
+    end
+
+    subgraph OSVAR["personal-os var/：可重建或可丢弃"]
+        direction LR
+        FINDB["cache/finance.sqlite<br/>共享 Finance projection"]:::runtime
+        OSTATES["automation/reviews.sqlite<br/>history/return-analysis.sqlite<br/>briefing / research / quote caches<br/>locks/assetstore.lock"]:::runtime
+    end
+
+    subgraph AGVAR["personal-agent var/：可重建或可丢弃"]
+        direction LR
+        AGSTATE["agent/sessions.db<br/>runtime operations / events / approvals / effects<br/>checkpoints.db / tool_results.db / lessons.db"]:::runtime
+        TRACE["Trace SQLite / optional OTLP<br/>RAG index / logs"]:::runtime
+    end
+
+    VAULT["personal-assets Git Vault<br/>唯一长期事实源"]:::asset
+    WESTOCK["行情与研究数据源"]:::external
+    MODEL["LLM / Web / MCP"]:::external
+
+    MAC -->|"HTTP / SSE"| API
+    API --> DOMAIN
+    API --> AGENTGW
+    API --> REVIEW
+    DOMAIN --> MARKET
+    DOMAIN --> WRITES
+    REVIEW -->|"deep research"| AGENTGW
+    REVIEW -->|"研究结果持久化"| WRITES
+    AGENTGW -->|"JWT + HTTP/SSE"| HTTP
+
+    HTTP --> APP
+    APP --> RT
+    RT --> ADAPTER
+    ADAPTER -->|"personal_os.* / Vault / Writeback callback"| API
+    ADAPTER -->|"finance.* 兼容读取，只读"| FINDB
+    ADAPTER --> MODEL
+
+    VAULT -->|"显式 rebuild"| FINDB
+    DOMAIN -->|"查询"| FINDB
+    WRITES -->|"durable write + scoped commit / optional push"| VAULT
+    APP -.->|"Skills / RAG / Memory projection 只读"| VAULT
+
+    REVIEW --> OSTATES
+    DOMAIN --> OSTATES
+    RT -->|"Runtime durable journal"| AGSTATE
+    APP -->|"session / checkpoint / application state"| AGSTATE
+    APP -->|"TraceLogger / OTel"| TRACE
+    MARKET --> WESTOCK
+
+    SUP -.->|"启动与健康检查"| API
+    SUP -.->|"启动与健康检查"| HTTP
+
+    classDef person fill:#ffffff,stroke:#334155,stroke-width:2px,color:#172033;
+    classDef client fill:#ffffff,stroke:#64748b,stroke-width:1.5px,color:#172033;
+    classDef os fill:#e8f2ff,stroke:#2563eb,stroke-width:2px,color:#15345b;
+    classDef agent fill:#fff4d8,stroke:#d97706,stroke-width:2px,color:#5b3512;
+    classDef agentcore fill:#ffd979,stroke:#92400e,stroke-width:3px,color:#3b2309;
+    classDef asset fill:#e6f6ed,stroke:#15803d,stroke-width:3px,color:#163d25;
+    classDef runtime fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px,color:#334155;
+    classDef external fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#334155;
+
+    style POS fill:#f7fbff,stroke:#93c5fd,stroke-width:2px
+    style PA fill:#fffdf6,stroke:#fbbf24,stroke-width:2px
+    style OSVAR fill:#fbfcfe,stroke:#cbd5e1,stroke-width:1px
+    style AGVAR fill:#fbfcfe,stroke:#cbd5e1,stroke-width:1px

@@ -1,10 +1,11 @@
 # 投研分析质量闸门：当前进展与后续计划
 
-更新时间：2026-08-21
+更新时间：2026-08-31
 
 ## 一、专项目标
 
-在 personal-assets 智能闭环自动化之前，先保证手动触发的 Deep Research 结果达到可用标准：
+在 personal-assets 智能闭环自动化持续运行的基础上，保证手动和自动触发的
+Deep Research 结果达到可用标准：
 
 ```text
 数据源可追溯
@@ -15,7 +16,7 @@
     ↓
 macOS App 可读、可回读
     ↓
-才允许进入自动化闭环
+进入可恢复的自动化复查闭环
 ```
 
 本专项不是放宽模型输出要求，而是把“研究结果能否落盘”从模型自报成功改为由 Agent 和 API 共同判定。
@@ -68,10 +69,16 @@ macOS App 可读、可回读
 - durable 研究卡写回与 API 回读：五粮液、腾讯、格力均保存 schema v2 研究卡，AssetStore commit 和 API 回读均通过。
 - macOS App 产品端验收：App 可正常打开，已确认研究卡和格力分析链路可用。
 
-## 四、当前未完成的门槛
+## 四、当前状态与未完成的门槛
 
-真实 Deep Research 内容质量门槛、代表性研究卡的 durable 写回/API 回读，以及 macOS App 产品端验收均已通过。
-历史研究卡清理已完成；当前尚未启动的是 personal-assets 自动化投研闭环。
+真实 Deep Research 内容质量门槛、代表性研究卡的 durable 写回/API 回读，以及
+macOS App 产品端验收均已通过。历史研究卡清理和 personal-assets 自动化投研
+基础闭环也已完成：ReviewService 已负责到期发现、任务恢复、失败退避、研究卡
+写回和消息投影。
+
+当前未完成的是长期运行观察，以及更完整的 `review_version` / durable message
+domain：当前实现仍以 schema v2 研究卡作为版本记录，并从相邻研究卡差异重建
+消息投影。
 
 因此当前状态是：
 
@@ -83,10 +90,13 @@ macOS App 可读、可回读
 | 真实 Deep Research 内容质量 | 通过 | 五粮液、腾讯、格力真实请求均完成修复并通过 |
 | API 实际写回与回读 | 通过 | 五粮液、腾讯、格力研究卡已通过 AssetStore 保存并可由 API 回读 |
 | macOS App 产品端验收 | 通过 | App 可正常打开，研究卡和格力分析链路已完成验证 |
-| 自动化 personal-assets 闭环 | 未启动 | 下一步设计自动化输入、写回、幂等和失败保护 |
+| 自动化 personal-assets 基础闭环 | 已实现 | ReviewService 已支持到期扫描、持久化任务、失败退避、研究卡写回和消息投影 |
+| 完整 review version / message domain | 未实现 | 仍需评估独立版本模型、durable 消息事件、服务端已读状态和分页 |
 
-此前确认的 3 张历史 schema v2 研究卡已通过独立 commit 清理；本轮新增的研究卡均为通过
-质量闸门后的有效写回。目录中的设计文档和研究卡均保留。
+此前确认的 3 张历史 schema v2 研究卡已通过独立 commit 清理；迁移过的旧研究卡又在
+2026-08-30 的 A 股质量观察池重建中清理。本轮新增的研究卡均为通过质量闸门后的有效
+写回；当前研究卡存量以 `personal-assets` 工作树为准，迁移和清理过程保留在 Git
+历史及本目录的执行记录中。
 
 ## 五、后续计划
 
@@ -110,14 +120,22 @@ macOS App 可读、可回读
 2. 已确认 App 可正常打开，研究卡和格力分析链路可用。
 3. 已确认新生成的研究不需要历史数据重跑即可使用新展示逻辑。
 
-### Phase 4：生产准入与自动化
+### Phase 4：生产准入与自动化（基础闭环已完成）
 
-Phase 1～3 已全部通过，下一步继续 personal-assets 智能闭环：
+Phase 1～3 已全部通过，自动化基础闭环已落地：
 
-- 手动分析结果成为自动化输入；
-- 通过 API-owned write path 写入 durable source of truth；
-- 保留来源、报告期、计算口径和质量状态；
-- 自动化任务失败时不写入半成品研究卡。
+- ReviewService 按观察池计划发现到期标的，并将任务状态保存到
+  `var/automation/reviews.sqlite`；
+- 自动复查调用 `personal-agent` 的 `deep_research` 模式；
+- 研究结果继续通过质量闸门后，经 API-owned write path 写入 schema v2 研究卡；
+- 失败任务按退避策略重试，不写入半成品研究卡；
+- 成功写回后由相邻研究卡差异生成消息投影，macOS App 在本地维护已读状态。
+
+后续重点：
+
+- 观察消息摘要质量、失败重试和真实复查成本；
+- 评估是否需要把当前研究卡历史和消息投影升级为独立的
+  `review_version` 与 durable message domain。
 
 ## 六、提交边界
 

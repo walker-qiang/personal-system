@@ -36,6 +36,9 @@ personal-assets/
   财富/
     资产/
     快照/
+    作废/
+    交易/
+    交易作废/
     投研/
     原始资料/
     投资政策.md
@@ -58,7 +61,7 @@ personal-assets/
 - `项目/` 可按 `README.md`、`过程记录/`、`交付物/`、`归档/` 组织阶段性产物。
 - `长乐道/`：人工主导的个人记录、复盘和长期轨迹；AI 默认不改写原文。
 - `长乐道/` 不用 `草稿/`、`decisions/` 这类状态型目录；草稿状态通过 frontmatter 表达。
-- `财富/`：结构化财富 facts、月度快照、投资政策和投研材料；资产与快照由程序主导写入，人工只做校验和例外处理。
+- `财富/`：结构化财富 facts、资产、估值快照、交易、修正/作废事实、投资政策和投研材料；资产与 finance facts 由程序主导写入，人工只做校验和例外处理。
 - `财富/投研/`：承接标的研究、观察池、组合复盘和模板类投研产物，由 AI 和人工共同维护，但不等同于财富事实。标的级内容以 `标的/<target_id>/` 为权威聚合目录。
 - `技能/`：由人工定义、AI 协助迭代的可复用 workflow / skill。
 - `附件/`：Vault 级附件；新附件默认按 `YYYY-MM/` 归档。
@@ -93,15 +96,26 @@ personal-assets/
 财富/
   资产/          asset master data
   快照/YYYY/MM/  point-in-time asset values
+  作废/YYYY/MM/  snapshot void facts
+  交易/YYYY/MM/  transaction and economic event facts
+  交易作废/YYYY/MM/ transaction void facts
   投研/          research, watchlists, reviews, and templates
   原始资料/      non-tabular sensitive finance source documents
   投资政策.md    personal investment policy
   targets.yaml   allocation targets
 ```
 
-当前持仓由最新有效估值快照推导，不直接手工维护。逐笔交易事实保存在
-`交易/`，用于解释资产变化、现金流和后续收益核算；组合判断和复盘写入
+当前持仓是混合派生视图，不直接手工维护：最新有效估值快照提供当前市值；
+基金、ETF、股票等数量型资产的数量、成本基础和已实现收益由有效交易事实
+聚合；现金和其他非数量型资产仍以快照为主。逐笔交易事实保存在
+`交易/`，用于解释资产变化、现金流和收益核算；组合判断和复盘写入
 `投研/`，数据摘要从估值快照和交易事实重算。
+
+快照金额保存为非负原币金额；负债使用 `balance_side: liability`、
+`asset_type: personal-debt` 和 `allocation_bucket: liability`，其快照金额
+表示正的待还金额，由 holdings 汇总在净资产计算中扣除。快照和交易事实的
+`source.method` 必须存在；修正通过完整替代事实，作废通过独立 void fact
+表达。
 
 ## 投研标的优先契约
 
@@ -133,7 +147,8 @@ personal-assets/
 - 全局列表、搜索、时间线和反向引用是可重建投影，不通过复制 durable 文件实现。
 - 同一内容只能有一个权威文件；迁移期间允许读新旧路径，但新写入只进入标的目录。
 - 收益分析的全部计算历史默认保存在本地 SQLite；只有固定、引用或确认的记录进入 `return-analysis/`。
-- 研究卡迁移前必须解除记录 ID 对文件路径的依赖，移动文件不能改变业务身份。
+- 研究卡迁移已完成记录 ID 与文件路径的解耦；移动文件不能改变业务身份，旧记录
+  的 `legacy_id` 和历史链接继续保留。
 - 当前按日期保存的多标的估值快照在确定新的权威模型前保持原状，不与标的 `valuation/` 双写。
 
 详细设计见

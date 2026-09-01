@@ -2,7 +2,7 @@
 
 > 文档状态：Canonical Architecture Baseline
 >
-> 基线日期：2026-08-23
+> 基线日期：2026-08-31
 >
 > 适用范围：`personal-system`、`personal-assets`、`personal-os`、`personal-agent`、`personal-tools`
 >
@@ -141,7 +141,7 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 - macOS 筋斗云主客户端；
 - Go API；
 - finance cache 和确定性计算；
-- snapshot create/correct/void 等窄结构化写入；
+- asset、snapshot、transaction 和 allocation target 等窄结构化写入；
 - 研究数据、研究卡、估值快照、观察池和基金池的受控 API 工作流；
 - 持久化自动投研 ReviewService、任务状态和失败退避；
 - Memory/Skill operation-specific Vault API；
@@ -172,12 +172,25 @@ finance、research 或 `personal-os` 的业务对象。Agent Application 可以�
 
 `personal-agent` 不拥有 finance facts、知识事实、用户最终判断、用户配置或
 durable write。任何 durable 写入都必须经过 `personal-os` 的受控写回边界。
+Application/Adapter 层可以从配置的 `personal-assets` 路径只读加载 Skills、
+RAG 文档和启动时 Memory projection，但不得直接修改 Vault 或执行 Vault Git。
 现有 `tools/adapters/personal_os.py` 中的 `personal_os.*` 工具定位为过渡期的远程 Tool Provider connector，不应向
 Runtime Core 反向扩散产品语义。
 
 ### 4.5 `personal-tools`
 
-可复用工具、MCP Server、脚本和自动化仓，负责提供能力，不负责定义产品事实源或应用业务边界。
+可复用工具仓，负责提供能力，不负责定义产品事实源或应用业务边界。当前
+HEAD 只维护两类能力：
+
+- `weixin-clip` v0.5.0 Chrome MV3 扩展：把微信文章和图片保存到用户授权的
+  文章根目录；当前推荐绑定 `personal-assets/资料/文章/`，再按 `YYYY-MM/`
+  归档；
+- `workspace-git-delivery` Codex Skill：以符号链接安装到全局 Codex Skills，
+  用于显式触发的多仓 Git 交付。
+
+旧 wiki-search、launchd 配置和通用脚本已在 `582524e` 移除，只存在于 Git
+历史；当前 `personal-tools` 不向 `personal-os` 或 `personal-agent` 提供运行时
+MCP Server。
 
 ### 4.6 Agent Gateway 与 Tool Provider
 
@@ -185,7 +198,8 @@ Runtime Core 反向扩散产品语义。
 区分“协议依赖”和“领域依赖”：
 
 - `personal-os` 通过 Agent Gateway 调用 `personal-agent`；
-- `personal-agent` 只依赖通用 `ToolExecutorPort` / Tool Provider 协议；
+- `personal-agent` Runtime Core 只依赖通用 `ToolExecutorPort` / Tool Provider
+  协议；Application/Adapter 层可使用明确配置的只读资产投影；
 - Finance、Research、用户配置和 durable write 工具由 `personal-os` 提供；
 - Agent 通过请求级工具清单和受控回调使用这些工具；
 - Runtime Core 不直接导入 `personal-os`，不拼接产品 API，不读取 Vault；
@@ -223,6 +237,7 @@ flowchart TD
     API -->|"JWT + HTTP/SSE"| GATEWAY["Agent Gateway"]
     GATEWAY --> AGENT["personal-agent :7101"]
     AGENT --> LG["LangGraph Application Orchestration"]
+    LG -.->|"Skills / RAG / Memory projection 只读"| VAULT
     LG --> RT["Independent Agent Runtime Core"]
     RT --> RS["Runtime SQLite"]
     RT --> TOOLS["Generic Tool Provider Port"]
@@ -255,15 +270,17 @@ Adapters: SQLite / Files / Git / Model / Tools
 关键约束：
 
 1. macOS App 不复制 finance 或 Agent 领域逻辑；
-2. Web 和 App 只调用 API；
+2. macOS App 和未来产品客户端只调用 API；
 3. `personal-os` 通过 Agent Gateway 使用 `personal-agent`，不导入其 Python 内核；
 4. LangGraph 可以依赖 Runtime Adapter，Runtime Core 不理解 LangGraph、DAG 或 App；
 5. Runtime Core 只依赖自己的 domain 和 ports；
 6. SQLite、模型和工具实现位于 adapters，不能被 domain 反向引用；
 7. `personal-agent` 不能绕过 API/AssetStore 直接写 durable Vault；
 8. Finance、Research 和用户相关业务工具由 `personal-os` Tool Provider 提供；
-9. Runtime Core 不直接依赖 `personal-os` 的业务 API；回调只存在于协议 adapter；
-10. `personal-assets` 不依赖任何应用或 Runtime。
+9. `personal-agent` Application/Adapter 只允许读取配置声明的 Skills、RAG 和
+   Memory projection 路径，不对 Vault 执行 Git；
+10. Runtime Core 不直接依赖 `personal-os` 的业务 API；回调只存在于协议 adapter；
+11. `personal-assets` 不依赖任何应用或 Runtime。
 
 ## 7. 数据权威与生命周期
 
@@ -293,7 +310,10 @@ Projection 必须记录来源文件、版本和必要的 source span，不能成
 
 观察池、同业组、基金池、组合复盘、模板和投资政策属于跨标的内容，继续保留在外层。`personal-os` 的全局研究列表、消息、搜索、日期视图和比较视图由 SQLite/cache 聚合，不通过复制 Vault 文件实现。
 
-迁移遵循“读新旧、只写新、禁止双写”。移动现有研究卡前必须先让稳定记录 ID 与文件路径解耦。完整设计和迁移顺序见
+迁移遵循“读新旧、只写新、禁止双写”。现有研究卡的稳定记录 ID 已与文件路径
+解耦。历史迁移曾将 8 张 schema v2 研究卡移入标的目录，后续已在
+2026-08-30 的 A 股质量观察池重建中清理；当前存量以 `personal-assets` 工作树
+为准。完整设计和迁移顺序见
 [`2026-08-23-target-centric-investment-information-architecture-design.md`](plans/2026-08-23-target-centric-investment-information-architecture-design.md)。
 
 ### 7.3 Operational Runtime State
@@ -386,7 +406,7 @@ personal-assets
 ### 9.2 当前 finance 写入
 
 ```text
-App / Web
+macOS App / API clients
   → personal-os API
   → finance write validation
   → AssetStore
@@ -396,7 +416,9 @@ App / Web
   → API response
 ```
 
-当前允许的 durable App 写入保持窄而结构化。发生 dirty worktree、重复日期、版本冲突或同步阻断时停止写入，不猜测合并。
+当前允许的 durable App 写入保持窄而结构化。无关 unstaged 修改不会阻断
+path-scoped 写入；发生 staged change、目标路径冲突、重复日期、版本冲突或
+同步阻断时停止写入，不猜测合并。
 
 ### 9.3 未来 AI 写回
 
@@ -619,17 +641,17 @@ Spaces
 |---|---|---|
 | Workspace governance | 已可用 | 顶层仓管理设计、规则和项目状态 |
 | Durable Vault | 稳定使用 | `personal-assets` 是唯一长期事实源 |
-| Finance facts | 已可用 | append-only snapshot/correction/void |
+| Finance facts | 已可用 | durable asset master plus append-only snapshot/transaction facts with correction/void |
 | Finance cache/API | 已可用 | SQLite 可重建，Go API 提供读写和状态 |
 | macOS App | 已可用 | 当前主入口，聚焦投资和个人助理 |
-| Web | 冻结 fallback | 兼容、调试和 E2E，不作为主产品入口 |
+| Web UI | 历史实现已移出当前应用树 | 仅保留 legacy API 兼容与 Git 历史，不是可运行产品入口 |
 | Independent Agent service | 已可用 | HTTP/SSE 接入 `personal-os` |
 | Independent Runtime | 已实现、已完成真实观察和顶层 legacy 清理 | 顶层执行固定 Runtime；旧消息/分支读取兼容保留 |
-| Ephemeral Debug Trace | 基础能力已实现 | 调试期间临时展示，不进入长期持久化；Web 已支持显式开关 |
+| Ephemeral Debug Trace | 基础能力已实现 | 调试期间临时展示，不进入长期持久化；macOS App 已支持显式开关 |
 | AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；Runtime 只执行应用层解析后的策略 |
 | Agent durable write | 受控开放 | 当前仅开放 `finance.snapshot.create` 的 plan → approval → execute 链路；不等于开放任意 Vault 写入 |
 | Memory / Skill durable write | 已收口 | Agent 请求经 `personal-os /api/vault/*` 和 AssetStore commit/push，不直接写 Vault |
-| Investment ReviewService | 已实现 | SQLite 持久化任务、到期扫描、单飞执行、失败退避和研究卡写回 |
+| Investment ReviewService | 已实现 | SQLite 持久化任务、到期扫描、全局串行执行、失败退避和研究卡写回 |
 | Generic Semantic Projection | 未形成系统边界 | Agent 内有 RAG/Graph 能力，但不是 canonical projection |
 | New / Changed engine | 投资场景已实现 | 研究卡相邻版本差异生成消息投影；通用 Changes engine 尚未实现 |
 | Generic Decision Service | 未实现 | 有投研和 Decision Skill 资产，但无通用服务 |
@@ -664,9 +686,10 @@ Entity、Topic、Claim、Belief、Decision 和 Relation 尚未形成统一可重
 
 ### 15.7 Generic Writeback
 
-AssetStore 已统一 clean、sync、限定路径 commit 和 push；finance、investment、
-memory、skill 使用 operation-specific 写入。通用路径授权、草稿升级和 provenance
-校验仍未设计完成。
+AssetStore 已统一锁、仓库/路径预检、冲突处理和限定路径 commit；finance、
+investment、memory、skill 使用 operation-specific 写入。需要远端发布的 operation
+执行 upstream sync/push，研究卡写入只创建本地 commit。通用路径授权、草稿升级
+和 provenance 校验仍未设计完成。
 
 ### 15.8 Managed Process Lifecycle
 

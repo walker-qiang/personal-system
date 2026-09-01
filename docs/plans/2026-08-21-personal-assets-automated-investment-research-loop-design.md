@@ -1,6 +1,7 @@
 # personal-assets 自动化投研闭环设计
 
-> 状态：V1 已实施并完成本地端到端 smoke
+> 状态：V1 基础闭环已实施并完成本地端到端 smoke；完整
+> `review_version` / durable message domain 仍是后续演进目标
 > 日期：2026-08-21
 > 范围：`personal-assets`、`personal-os`、`personal-agent`
 >
@@ -11,7 +12,9 @@
 
 ## 1. 背景与目标
 
-现有系统已经完成研究数据层、官方事实对账、Deep Research 质量闸门、研究卡 durable 写回/API 回读以及 App 链路验收。下一步建设 personal-assets 自动化投研闭环。
+现有系统已经完成研究数据层、官方事实对账、Deep Research 质量闸门、研究卡
+durable 写回/API 回读、ReviewService 自动复查基础闭环以及 App 链路验收。
+后续重点是观察自动复查质量，并评估是否需要独立的版本和消息域模型。
 
 本方案的第一版目标不是定时重写完整研报，而是建立“研究池定时复查”能力：
 
@@ -46,10 +49,12 @@ App 消息中心
 `personal-assets` 是 durable source of truth，保存：
 
 - 研究池条目及其复查配置；
-- 标的最新认知卡；
-- 每次复查产生的不可变 `review_version`；
-- 版本之间的认知差异、证据引用和市场事件；
-- 与研究版本绑定的消息事件记录。
+- 标的最新认知卡及 schema v2 研究卡历史；
+- 研究卡中的证据引用和市场事件。
+
+当前不在 `personal-assets` 中单独保存 `review_version` 或消息事件记录。
+复查任务和计划状态保存在 `personal-os` 的 SQLite 运行态，消息由研究卡
+相邻版本差异重建。
 
 投研产物统一位于 `财富/投研/`。SQLite、HTML 缓存、运行日志和任务状态不进入 durable 资产目录。
 
@@ -61,9 +66,9 @@ App 消息中心
 - 获取和标准化最新行情、财务、公告及市场信息；
 - 调用 `personal-agent` 执行旧认知与新证据比较；
 - 执行研究结果质量闸门；
-- 通过受控 `AssetStore` 写入研究版本；
+- 通过受控 `AssetStore` 写入 schema v2 研究卡；
 - 生成消息中心所需的消息投影和深链接；
-- 保存消息已读状态等 App 运行态。
+- 由 macOS App 保存消息已读状态等客户端运行态。
 
 ### 3.3 personal-agent
 
@@ -71,9 +76,13 @@ App 消息中心
 
 ## 4. 核心数据模型
 
+本节同时记录当前实现和目标演进模型。当前 V1 使用观察池配置、
+schema v2 研究卡和可重建消息投影；标记为“目标模型”的字段和事件实体
+尚未作为独立 durable schema 落地。
+
 ### 4.1 研究池条目
 
-研究池条目建议至少包含：
+目标模型中的研究池条目建议至少包含：
 
 ```text
 watch_id
@@ -86,6 +95,11 @@ alert_policy
 created_at
 updated_at
 ```
+
+当前实现以 `财富/投研/观察池/**` 中的观察池条目和
+`review_schedule` 为配置来源；`last_review` / `next_review` 的复查状态
+由 `personal-os` ReviewService 运行态单独保存，不维护 `current_version_id`
+和 `alert_policy` 这些独立字段。
 
 观察池维护一个默认复查频率；标的可以选择继承默认频率，或单独覆盖为自己的频率。第一版支持固定的日、周、月间隔；标的还可以配置不同的关注重点，例如盈利、估值、竞争格局或监管风险。
 
@@ -116,9 +130,10 @@ review_schedule:
 
 编辑频率只改变调度配置和 `next_review_at`，不生成新的认知版本，也不发送消息。用户点击“立即复查”时，才单独创建一次复查任务。
 
-### 4.2 认知版本
+### 4.2 认知版本（目标模型）
 
-每次成功复查都追加一个不可变的 `review_version`，即使没有明显变化也必须保留：
+目标模型要求每次成功复查都追加一个不可变的 `review_version`，即使没有
+明显变化也必须保留：
 
 ```text
 version_id
@@ -164,9 +179,33 @@ uncertain       证据不足，暂无法判断
 
 版本通过 `previous_version_id` 串联，形成单个标的的完整认知链。历史版本不被后续版本覆盖。
 
-### 4.3 消息
+当前实现不单独生成上述 `review_version`。每次成功复查追加一张普通
+schema v2 研究卡，由服务端生成稳定 `record_id`；历史顺序和相邻版本关系
+由研究日期、保存时间和文件路径推导。
 
-消息与 `review_version` 绑定，至少包含：
+### 4.3 消息（当前为可重建投影，目标为 durable message）
+
+当前消息由 `GET /api/investment/messages` 在读取时根据相邻研究卡差异重建，
+并使用运行态 JSON 缓存 AI 生成的变化摘要。当前响应字段为：
+
+```text
+id
+asset_code
+asset_name
+review_record_id
+message_type
+severity
+title
+summary
+changed_sections
+created_at
+target
+```
+
+当前没有独立 durable 消息表、`dedup_key`、服务端 unread/read 状态或分页。
+macOS App 在 `UserDefaults` 中维护已读 ID。
+
+目标模型中的消息与 `review_version` 绑定，至少包含：
 
 ```text
 message_id
@@ -188,18 +227,15 @@ dedup_key
 ```text
 定时器发现 next_review_at 到期
   -> 创建 review_run
-  -> 读取标的当前版本
-  -> 获取上次复查之后的增量信息
-  -> 获取当前行情、估值、财务和官方披露
-  -> personal-agent 比较旧认知与新证据
+  -> 调用 personal-agent 执行 deep_research
   -> 质量闸门校验结构、来源、期间和完整性
-  -> AssetStore 追加 review_version
-  -> 判断是否生成消息
-  -> 写入消息投影
-  -> 更新 current_version_id 和 next_review_at
+  -> AssetStore 追加 schema v2 研究卡
+  -> 根据相邻研究卡差异生成并缓存消息摘要
+  -> 更新 ReviewService 运行态的 last_review / next_review
 ```
 
-同一标的同时只允许一个复查任务运行。复查失败、证据不足或质量校验失败时，不写入半成品版本，也不生成消息；任务保留失败原因并进入可重试状态。
+同一时刻 ReviewService 顺序执行任务。复查失败、证据不足或质量校验失败
+时，不写入半成品研究卡；任务保留失败原因并按退避策略进入可重试状态。
 
 复查输入至少包括：
 
@@ -270,31 +306,30 @@ Thesis 与反 Thesis
 
 ### 7.3 消息中心
 
-App 新增全局消息中心，包含两个 Tab：
+当前 App 已有全局消息中心，包含两个 Tab：
 
 ```text
 未读提醒
 已读提醒
 ```
 
-每条消息显示严重程度、消息类型、一句话摘要、受影响判断维度、发生时间和来源。点击消息后：
+当前每条消息显示标题、摘要和发生时间；点击消息后：
 
 ```text
 标记为已读
   -> 跳转标的详情
-  -> 定位到对应 review_version
-  -> 自动展开本次变化的 Thesis / 风险 / 市场事件区块
+  -> 跳转到对应标的详情
+  -> 使用 `review_record_id` 定位到对应研究卡历史
 ```
 
-建议跳转目标保持稳定：
+当前返回的跳转目标使用标的代码和研究卡 `record_id`：
 
 ```text
-/investment/assets/{asset_id}
-/investment/assets/{asset_id}/history/{review_version_id}
-/investment/assets/{asset_id}/history/{review_version_id}#risks
+/investment/assets/{code}/history/{record_id}
 ```
 
-列表浏览不自动标记已读；点击消息后标记已读。已读消息保留并支持分页查看，不做自动删除。
+列表浏览不自动标记已读；点击消息后由 macOS App 在本地标记已读。
+已读消息保留，但当前没有服务端分页。
 
 ### 7.4 观察池列表
 
@@ -325,38 +360,44 @@ HTML 作为 `personal-os` 的展示投影，不作为唯一事实源。结构化
 - `section` 表示 Thesis、事实、风险、触发器和市场事件；
 - 证据链接直接挂在对应判断下。
 
-这样 Web、macOS App 和后续通知渠道可以复用同一份内容模型，而不需要把 HTML 再解析回事实数据。
+这样 macOS App、Agent 和后续客户端/通知渠道可以复用同一份内容模型，而不需要把
+HTML 再解析回事实数据。
 
 ## 9. 幂等、失败与安全边界
 
-- 同一标的复查任务单飞，避免重复并发。
-- `review_version` 使用基于标的、基线版本和证据快照的幂等键。
-- 消息使用 `dedup_key`，重试不会重复生成提醒。
+- ReviewService 使用全局执行锁顺序执行任务；计划任务通过观察池、标的和计划时间
+  的幂等键去重，手动复查使用独立任务 ID。
+- 当前消息 ID 基于研究卡 `record_id`，消息列表由相邻研究卡差异重建。
 - 研究结果必须通过现有质量闸门后才允许写回。
-- `personal-agent` 不直接访问 `personal-assets` 或 Git。
+- `personal-agent` 不直接写入 `personal-assets`，也不操作 Git；当前只读加载的
+  Skill、RAG 文档和 Memory profile 仍可来自本地 `personal-assets` checkout。
 - 所有 durable 写入继续经过 `personal-os` 和 `AssetStore`。
-- 工作区脏、远端分叉、计划过期或 schema 校验失败时拒绝写入。
-- 写回成功但消息投影失败时，保留研究版本，标记消息投影待重建，不回滚 durable 事实。
+- AssetStore 允许无关 unstaged 修改，但拒绝 staged change、merge state、
+  目标路径冲突和分叉同步。
+- 消息摘要生成失败时使用确定性 fallback；摘要属于运行态缓存，不影响研究卡写回。
 - 消息中心读取失败不影响标的详情和研究版本读取。
 
 ## 10. 第一版范围
 
-第一版包含：
+当前 V1 基础闭环包含：
 
 - 研究池条目和按标的配置复查间隔；
 - 观察池列表展示和编辑复查频率、自动复查状态、上次/下次复查时间；
 - 从观察池列表触发立即复查、暂停和恢复自动复查；
 - 定时发现到期标的；
-- 单标的复查、认知比较和版本化写回；
-- 无变化版本留痕；
-- 认知变化和重大市场事件消息；
-- 标的最新判断和历史时间线；
-- 消息中心的未读/已读 Tab；
-- 消息到标的版本和判断区块的深链接；
+- 单标的复查、研究卡追加写回和相邻版本差异比较；
+- 研究卡历史留痕；
+- 认知变化和重大市场事件消息投影；
+- 标的最新判断和研究卡历史时间线；
+- 消息中心的未读/已读 Tab（已读状态由 macOS App 本地维护）；
+- 消息到标的研究卡记录的深链接；
 - 幂等、失败保护和可重试。
 
-第一版暂不包含：
+当前 V1 暂不包含：
 
+- 独立 `review_version` / `previous_version_id` durable schema；
+- durable message event、`dedup_key`、服务端已读状态和消息分页；
+- 版本级 `unchanged` / `strengthened` 等结构化变化状态；
 - 实时行情流和全天候新闻监听；
 - 自动交易或交易建议执行；
 - 自动修改投资政策；
@@ -365,6 +406,11 @@ HTML 作为 `personal-os` 的展示投影，不作为唯一事实源。结构化
 - 多用户协作和复杂通知渠道编排。
 
 ## 11. 验收标准
+
+以下是完整目标模型的验收标准。当前 V1 已覆盖 ReviewService、研究卡写回、
+相邻版本差异消息投影和 macOS 消息中心的基础部分；涉及独立
+`review_version`、durable message、跨来源事件去重和版本级变化状态的条目
+仍属于后续演进。
 
 1. 到期标的能够自动创建并执行一次复查任务。
 2. 观察池列表展示每个标的的复查频率、自动复查状态、上次复查时间和下一次复查时间。

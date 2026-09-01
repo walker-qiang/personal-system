@@ -48,8 +48,8 @@ projects:
     completion: active
     long_term: true
     current_path: /Users/qiang.lilq/personal-system/personal-tools
-    role: reusable personal tools, MCP servers, scripts, and automation
-    next: keep in sync with Codex MCP config and launchd plists
+    role: reusable personal tool repo; current inventory is the weixin-clip Chrome extension and workspace-git-delivery Codex skill
+    next: finish real-page acceptance for weixin-clip and keep the workspace-git-delivery global Codex symlink aligned with its source
 migration_sources:
   - name: obsidian-wiki
     current_path: not_found_in_current_workspace_snapshot (historical obsidian-wiki references remain in docs and migrated facts)
@@ -67,8 +67,13 @@ migration_sources:
     final_state: archived
     migrated_into: personal-os macOS App
 top_level_tracked_areas:
+  - .gitignore
+  - .obsidian
+  - .workbuddy
   - docs
-  - tools
+  - e2e-test-report
+  - package.json
+  - package-lock.json
   - README.md
   - AGENTS.md
   - workspace.yaml

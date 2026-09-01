@@ -1,0 +1,69 @@
+%%{init: {"theme": "base", "flowchart": {"curve": "basis", "htmlLabels": true, "nodeSpacing": 30, "rankSpacing": 44}, "themeVariables": {"fontFamily": "Arial, PingFang SC, sans-serif", "lineColor": "#64748b", "textColor": "#172033"}}}%%
+flowchart LR
+    USER["当前用户"]:::person --> HUB["入口与维护工作台"]:::client
+
+    subgraph ENTRY["用户入口"]
+        direction TB
+        MAC["筋斗云 macOS App"]:::client
+        OBS["Obsidian"]:::client
+        CODEX["Codex"]:::client
+        TRAE["Trae"]:::client
+        CHROME["Chrome"]:::client
+    end
+
+    subgraph WORKSPACE["personal-system workspace"]
+        direction TB
+        GOV["顶层 governance<br/>跨仓边界、项目登记、设计与迁移记录"]:::governance
+
+        subgraph CORE["核心运行系统"]
+            direction LR
+            OS["personal-os<br/>产品与业务控制面<br/>macOS App、Go API、Finance、Research、AssetStore"]:::os
+            AGENT["personal-agent<br/>通用 Agent 执行面<br/>Application、LangGraph、Independent Runtime"]:::agent
+        end
+
+        subgraph FOUNDATION["长期资产与复用能力"]
+            direction LR
+            VAULT["personal-assets<br/>Durable Source of Truth<br/>Finance、Knowledge、Memory、Skills"]:::asset
+            CLIP["weixin-clip<br/>Chrome 剪藏扩展"]:::tool
+            DELIVERY["workspace-git-delivery<br/>Codex Skill"]:::tool
+        end
+    end
+
+    EXTERNAL["外部能力<br/>LLM、Web、行情与研究数据"]:::external
+
+    HUB --> MAC
+    HUB --> OBS
+    HUB --> CODEX
+    HUB --> TRAE
+    HUB --> CHROME
+
+    MAC -->|"产品 API"| OS
+    OBS <-->|"人工读写"| VAULT
+    CODEX -.->|"维护 workspace / 子项目"| GOV
+    TRAE -.->|"维护 workspace / 子项目"| GOV
+    CHROME --> CLIP
+    CLIP -->|"授权目录中的原始资料"| VAULT
+    DELIVERY -.->|"全局符号链接安装"| CODEX
+
+    OS -->|"Agent Gateway：JWT + HTTP/SSE"| AGENT
+    AGENT -->|"personal_os.* Tool Provider<br/>Vault / Writeback API"| OS
+    VAULT -->|"读取与 cache / index rebuild"| OS
+    OS -->|"AssetStore operation-specific write"| VAULT
+    VAULT -.->|"Skills / RAG / Memory projection 只读"| AGENT
+
+    OS -->|"行情与研究数据"| EXTERNAL
+    AGENT -->|"模型、Web 与通用 MCP"| EXTERNAL
+
+    classDef person fill:#ffffff,stroke:#334155,stroke-width:2px,color:#172033;
+    classDef governance fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#172033;
+    classDef client fill:#ffffff,stroke:#64748b,stroke-width:1.5px,color:#172033;
+    classDef os fill:#e8f2ff,stroke:#2563eb,stroke-width:2px,color:#15345b;
+    classDef agent fill:#fff4d8,stroke:#d97706,stroke-width:2px,color:#5b3512;
+    classDef asset fill:#e6f6ed,stroke:#15803d,stroke-width:3px,color:#163d25;
+    classDef tool fill:#f3e8ff,stroke:#7e22ce,stroke-width:2px,color:#3b1760;
+    classDef external fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#334155;
+
+    style ENTRY fill:#ffffff,stroke:#cbd5e1,stroke-width:1px
+    style WORKSPACE fill:#ffffff,stroke:#94a3b8,stroke-width:2px
+    style CORE fill:#ffffff,stroke:#cbd5e1,stroke-width:1px
+    style FOUNDATION fill:#ffffff,stroke:#cbd5e1,stroke-width:1px
