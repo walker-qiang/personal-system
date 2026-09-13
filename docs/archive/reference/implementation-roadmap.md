@@ -29,7 +29,7 @@ Use these defaults unless real implementation friction proves otherwise.
 | Sync | Scheduled pull + write-time final sync check | Enough for single-user multi-node usage |
 | Cloud access | Tailscale first | Private single-user access without building account/auth infrastructure |
 | Mobile | Deferred for V1 | Do not spend current work on phone browser handling; revisit responsive web/PWA only after desktop finance workflow is stable |
-| Knowledge target name | `知识/` | Clearer long-term name than preserving `wiki/` as an architecture concept |
+| Knowledge target name | `21-知识/` | Clearer long-term name than preserving `wiki/` as an architecture concept |
 | Compatibility | No historical compatibility constraint | Migrate intentionally after the new path works |
 
 Personal data and secrets may live in the private asset repository and sync across trusted nodes.
@@ -76,20 +76,20 @@ Recommended initial tree:
 personal-assets/
   README.md
   AGENTS.md
-  资料/
+  20-资料/
     文章/
     书籍/
     课程/
     论文/
     视频/
     官方文档/
-  知识/
+  21-知识/
     领域/
     概念/
     实体/
-  项目/
-  长乐道/
-  财富/
+  30-项目/
+  00-长乐道/
+  13-财富/
     资产/
     快照/
     交易/
@@ -98,9 +98,9 @@ personal-assets/
     模式/
     审计/
     targets.yaml
-  技能/
-  附件/
-  模板/
+  31-技能/
+  91-附件/
+  90-模板/
 ```
 
 Work:
@@ -230,7 +230,7 @@ Work:
 1. Add `capture.inbox.create`.
 2. Add `capture.raw.create`.
 3. Add source metadata requirements.
-4. Add a source-backed ingest workflow from `资料/` to `知识/`.
+4. Add a source-backed ingest workflow from `20-资料/` to `21-知识/`.
 5. Migrate only a small representative subset from `obsidian-wiki`.
 
 Acceptance:
@@ -266,7 +266,7 @@ Use current repos as inputs in this order:
 1. `personal-finance`: mine finance concepts, SQLite/API behavior, and useful code.
 2. `personal-web`: mine UI structure and finance/chat screens.
 3. `personal-agent`: mine useful prompt/tool patterns after finance read APIs exist.
-4. `obsidian-wiki`: migrate only after `知识/` ingest rules are working.
+4. `obsidian-wiki`: migrate only after `21-知识/` ingest rules are working.
 5. `personal-tools`: move or wrap capture tools only after AssetStore exists.
 6. `openclaw-workspace`: keep experimental unless a concrete component is proven useful.
 
@@ -279,7 +279,7 @@ Existing changed admin/management pages should keep their current behavior and l
 The next concrete package should be:
 
 1. Create the `personal-os` repository scaffold.
-2. Build a read-only finance cache builder from `personal-assets/财富/**` to SQLite.
+2. Build a read-only finance cache builder from `personal-assets/13-财富/**` to SQLite.
 3. Reproduce legacy read API parity for assets, snapshots, holdings, and bucket targets.
 4. Add doctor/status checks for asset repo path, source commit, and cache freshness.
 5. Keep existing admin/management pages unchanged.

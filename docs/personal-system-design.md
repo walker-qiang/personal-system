@@ -183,7 +183,7 @@ Runtime Core 反向扩散产品语义。
 HEAD 只维护两类能力：
 
 - `weixin-clip` v0.5.0 Chrome MV3 扩展：把微信文章和图片保存到用户授权的
-  文章根目录；当前推荐绑定 `personal-assets/资料/文章/`，再按 `YYYY-MM/`
+  文章根目录；当前推荐绑定 `personal-assets/20-资料/文章/`，再按 `YYYY-MM/`
   归档；
 - `workspace-git-delivery` Codex Skill：以符号链接安装到全局 Codex Skills，
   用于显式触发的多仓 Git 交付。
@@ -306,7 +306,7 @@ Projection 必须记录来源文件、版本和必要的 source span，不能成
 
 ### 7.2.1 投研标的优先组织
 
-`personal-assets/财富/投研/标的/<target_id>/` 是单个投资对象长期信息的权威聚合目录。profile、官方报告、研究卡、收益分析快照、标的估值和事件按稳定标的 ID 归档。
+`personal-assets/13-财富/投研/标的/<target_id>/` 是单个投资对象长期信息的权威聚合目录。profile、官方报告、研究卡、收益分析快照、标的估值和事件按稳定标的 ID 归档。
 
 观察池、同业组、基金池、组合复盘、模板和投资政策属于跨标的内容，继续保留在外层。`personal-os` 的全局研究列表、消息、搜索、日期视图和比较视图由 SQLite/cache 聚合，不通过复制 Vault 文件实现。
 
@@ -444,7 +444,7 @@ Runtime writeback 继续使用 plan → approval → execute。
 - `Capture`：网页、PDF、文章、邮件、API、文件和自动 Monitor 等外部信息进入；
 - `Create`：用户主动记录 Observation、Idea、Question、Belief、Decision、Review 和 Project Note。
 
-外部来源默认先保存原文和元数据，进入 `资料/**` 或对应关注域的原始记录；AI 派生内容与来源分开。用户主动输入不能被当成自动收录的 fallback，因为大量最有价值的 Personal Intelligence 并不存在于互联网。
+外部来源默认先保存原文和元数据，进入 `20-资料/**` 或对应关注域的原始记录；AI 派生内容与来源分开。用户主动输入不能被当成自动收录的 fallback，因为大量最有价值的 Personal Intelligence 并不存在于互联网。
 
 输入体验采用渐进式结构：
 

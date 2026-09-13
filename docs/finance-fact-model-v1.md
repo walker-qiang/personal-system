@@ -125,8 +125,8 @@ Rules:
   omitted or JSON `null` optional fields as "keep the original value", then
   writes a complete replacement fact. For correction requests, `notes: ""`
   explicitly clears notes.
-- A corrected snapshot is still a complete snapshot record under `财富/快照/**`.
-- A corrected transaction is still a complete transaction record under `财富/交易/**`.
+- A corrected snapshot is still a complete snapshot record under `13-财富/快照/**`.
+- A corrected transaction is still a complete transaction record under `13-财富/交易/**`.
 - Use `correction_of` to link to the previous fact.
 - Use `correction_reason` to explain the correction.
 
@@ -155,13 +155,13 @@ Rules:
 Snapshot void path:
 
 ```text
-财富/作废/YYYY/MM/<snapshot_date>-<asset_code>-<snap_void_id>.json
+13-财富/作废/YYYY/MM/<snapshot_date>-<asset_code>-<snap_void_id>.json
 ```
 
 Transaction void path:
 
 ```text
-财富/交易作废/YYYY/MM/<occurred_date>-<asset_code>-<txn_void_id>.json
+13-财富/交易作废/YYYY/MM/<occurred_date>-<asset_code>-<txn_void_id>.json
 ```
 
 ## Money

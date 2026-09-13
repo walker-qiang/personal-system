@@ -66,7 +66,7 @@ personal-os 必须重新校验计划，不能信任 Agent 之前的校验结果�
   "normalized_payload": {},
   "materialized": {
     "fact_id": "snap_...",
-    "relative_path": "财富/快照/YYYY/MM/....json",
+    "relative_path": "13-财富/快照/YYYY/MM/....json",
     "created_at": "..."
   },
   "precondition": {
@@ -230,7 +230,7 @@ Runtime SQLite 保存运行态审计：operation、approval、effect、owner/ses
 成功的 durable 写入同时提交精简审计文件：
 
 ```text
-财富/审计/YYYY/MM/<operation-id>.json
+13-财富/审计/YYYY/MM/<operation-id>.json
 ```
 
 审计文件保存 operation、actor、owner、session、plan hash、目标路径和 commit，不重复保存完整财务金额。
@@ -258,7 +258,7 @@ error  -> correction fact
 - 第一批 operation 为 `finance.snapshot.create`；
 - 计划冻结 fact ID、创建时间、目标路径、仓库 commit、幂等键和 plan hash；
 - 执行时重新校验 owner/session、hash、过期时间、仓库 commit、资产引用和重复日期；
-- 写入事实和 `财富/审计/**`，通过 AssetStore commit、push 和 finance cache rebuild；
+- 写入事实和 `13-财富/审计/**`，通过 AssetStore commit、push 和 finance cache rebuild；
 - `personal-agent` 增加 `writeback.prepare` 与 `writeback.execute_plan`；
 - `read_only` 和 legacy 直接执行路径阻断 durable writeback；
 - `writeback` 模式强制 Runtime；

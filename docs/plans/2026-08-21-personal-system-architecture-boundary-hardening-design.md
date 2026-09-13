@@ -17,8 +17,8 @@
 
 ## 2. Vault 写入边界
 
-`personal-agent` 继续直接读取 `personal-assets/技能/**` 和
-`personal-assets/system/memory/**`，但所有变更请求改为调用 `personal-os`：
+`personal-agent` 继续直接读取 `personal-assets/31-技能/**` 和
+`personal-assets/92-系统/memory/**`，但所有变更请求改为调用 `personal-os`：
 
 ```text
 personal-agent API
@@ -30,7 +30,7 @@ personal-agent API
   -> personal-agent reload/sync SQLite projection
 ```
 
-Memory 写入以完整 profile 替换 `system/memory/<user>.json`；Skill 写入使用
+Memory 写入以完整 profile 替换 `92-系统/memory/<user>.json`；Skill 写入使用
 `create_skill`、`update_skill`、`delete_skill`、`write_knowledge`、
 `delete_knowledge`、`write_script`、`delete_script` 七种显式 operation。
 `personal-os` 负责路径生成和遍历校验，不提供通用 `write_file`。

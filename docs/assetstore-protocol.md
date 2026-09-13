@@ -138,19 +138,19 @@ Recommended initial operation types:
 
 | Operation | Purpose | Allowed Target |
 |---|---|---|
-| `capture.source.create` | Captured source document | `资料/**` |
-| `knowledge.ingest` | Source-backed synthesis | `知识/**`, `财富/审计/**` when finance-related |
-| `finance.asset.upsert` | Create/update asset master data | `财富/资产/**` |
-| `finance.snapshot.create` | Append asset snapshot | `财富/快照/**` |
-| `finance.snapshot.correct` | Append replacement snapshot | `财富/快照/**` |
-| `finance.snapshot.void` | Void an effective snapshot | `财富/作废/**` |
-| `finance.transaction.create` | Append transaction | `财富/交易/**` |
-| `finance.transaction.correct` | Append replacement transaction | `财富/交易/**` |
-| `finance.transaction.void` | Void an effective transaction | `财富/交易作废/**` |
-| `finance.target.update` | Update allocation targets | `财富/targets.yaml` |
-| `report.create` | Create analysis/report output | `项目/**`, `财富/报表/**` |
-| `skill.update` | Update reusable AI workflows | `技能/**` |
-| `vault.rule.update` | Update repository rules or schemas | `AGENTS.md`, `README.md`, `财富/模式/**` |
+| `capture.source.create` | Captured source document | `20-资料/**` |
+| `knowledge.ingest` | Source-backed synthesis | `21-知识/**`, `13-财富/审计/**` when finance-related |
+| `finance.asset.upsert` | Create/update asset master data | `13-财富/资产/**` |
+| `finance.snapshot.create` | Append asset snapshot | `13-财富/快照/**` |
+| `finance.snapshot.correct` | Append replacement snapshot | `13-财富/快照/**` |
+| `finance.snapshot.void` | Void an effective snapshot | `13-财富/作废/**` |
+| `finance.transaction.create` | Append transaction | `13-财富/交易/**` |
+| `finance.transaction.correct` | Append replacement transaction | `13-财富/交易/**` |
+| `finance.transaction.void` | Void an effective transaction | `13-财富/交易作废/**` |
+| `finance.target.update` | Update allocation targets | `13-财富/targets.yaml` |
+| `report.create` | Create analysis/report output | `30-项目/**`, `13-财富/报表/**` |
+| `skill.update` | Update reusable AI workflows | `31-技能/**` |
+| `vault.rule.update` | Update repository rules or schemas | `AGENTS.md`, `README.md`, `13-财富/模式/**` |
 
 Avoid generic "write file" operations in product surfaces. The operation type is the contract.
 
@@ -373,7 +373,7 @@ actor: codex
 node: work-mac
 request: req_01HY...
 sources:
-- 资料/文章/2026/05/example.md
+- 20-资料/文章/2026/05/example.md
 ```
 
 Avoid large mixed commits. One user action should normally produce one commit.
@@ -409,8 +409,8 @@ Example:
 operations:
   finance.snapshot.create:
     allow:
-      - 财富/快照/**
-      - 财富/审计/**
+      - 13-财富/快照/**
+      - 13-财富/审计/**
     deny:
       - "**/.env"
 ```
@@ -449,10 +449,10 @@ Initial cache types:
 
 | Cache | Built From | Used By |
 |---|---|---|
-| Finance SQLite | `财富/**` facts | macOS App/API responses, analytics, Agent tools |
-| Wiki full-text index | `知识/**`, `技能/**` | Search and retrieval |
-| Attachment metadata | `附件/**` | Capture/preview UI |
-| Optional vector index | curated `知识/` and `资料/` subsets | Semantic retrieval |
+| Finance SQLite | `13-财富/**` facts | macOS App/API responses, analytics, Agent tools |
+| Wiki full-text index | `21-知识/**`, `31-技能/**` | Search and retrieval |
+| Attachment metadata | `91-附件/**` | Capture/preview UI |
+| Optional vector index | curated `21-知识/` and `20-资料/` subsets | Semantic retrieval |
 
 Cache metadata should record:
 
@@ -498,7 +498,7 @@ Recommended actors:
 
 Rules:
 
-- AI cannot rewrite `资料/**`.
+- AI cannot rewrite `20-资料/**`.
 - AI durable knowledge writes should include source refs.
 - AI writes involving L3 source material require the privacy policy to allow the model path.
 - High-risk writes should create drafts or reports, not overwrite durable knowledge directly.
@@ -547,7 +547,7 @@ Response:
   "operation": "finance.snapshot.create",
   "commit_sha": "abc1234",
   "files_written": [
-    "财富/快照/2026/05/2026-05-23-cmb-cash-snap_01HY.json"
+    "13-财富/快照/2026/05/2026-05-23-cmb-cash-snap_01HY.json"
   ],
   "cache": {
     "rebuilt": true,
@@ -568,7 +568,7 @@ Error response:
   "error_code": "SYNC_CONFLICT",
   "message": "Local and remote branches diverged while syncing personal-assets.",
   "conflicts": [
-    "财富/targets.yaml"
+    "13-财富/targets.yaml"
   ],
   "next_action": "Resolve the Git conflict manually, then retry."
 }
@@ -629,7 +629,7 @@ The original staged recommendation has partially landed in a different order:
 1. **Implemented:** shared Go packages and API-owned AssetStore operations.
 2. **Implemented:** structured asset, snapshot, transaction, allocation target,
    research-card, official-fact, watchlist, and bounded Vault writes.
-3. **Implemented:** finance cache rebuild from `财富/**`.
+3. **Implemented:** finance cache rebuild from `13-财富/**`.
 4. **Implemented:** HTTP API integration and the macOS product client.
 5. **Not implemented:** a standalone AssetStore CLI or local service.
 6. **Not implemented:** generic knowledge/capture operations, cloud-node writes,

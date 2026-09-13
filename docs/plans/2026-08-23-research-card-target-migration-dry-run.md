@@ -4,7 +4,7 @@
 >
 > 生成日期：2026-08-23
 >
-> 数据源：`personal-assets/财富/投研/研究/`
+> 数据源：`personal-assets/13-财富/投研/研究/`
 >
 > 本报告在 dry-run 生成时只读检查，未移动或修改任何研究卡。
 
@@ -48,7 +48,7 @@ record_id: <legacy_record_id>
 2. 将文件移动到：
 
 ```text
-财富/投研/标的/<target_id>/research/<原文件名>
+13-财富/投研/标的/<target_id>/research/<原文件名>
 ```
 
 除新增 `record_id` 外不修改正文、来源、日期、状态或研究结论。
@@ -90,8 +90,8 @@ record_id: <legacy_record_id>
 `research_3cw0toyrl7wg7`
 
 ```text
-财富/投研/研究/2026-08-20-105314-stock-sz000858.md
-→ 财富/投研/标的/sz000858/research/2026-08-20-105314-stock-sz000858.md
+13-财富/投研/研究/2026-08-20-105314-stock-sz000858.md
+→ 13-财富/投研/标的/sz000858/research/2026-08-20-105314-stock-sz000858.md
 ```
 
 - 原 SHA256：`08bc50db3593`
@@ -101,8 +101,8 @@ record_id: <legacy_record_id>
 `research_28j88zhspj44e`
 
 ```text
-财富/投研/研究/2026-08-21-170839-stock-sz000858.md
-→ 财富/投研/标的/sz000858/research/2026-08-21-170839-stock-sz000858.md
+13-财富/投研/研究/2026-08-21-170839-stock-sz000858.md
+→ 13-财富/投研/标的/sz000858/research/2026-08-21-170839-stock-sz000858.md
 ```
 
 - 原 SHA256：`9ed30f1bdd21`
@@ -112,8 +112,8 @@ record_id: <legacy_record_id>
 `research_2nk58c57e9sjv`
 
 ```text
-财富/投研/研究/2026-08-22-220239-stock-sz000858.md
-→ 财富/投研/标的/sz000858/research/2026-08-22-220239-stock-sz000858.md
+13-财富/投研/研究/2026-08-22-220239-stock-sz000858.md
+→ 13-财富/投研/标的/sz000858/research/2026-08-22-220239-stock-sz000858.md
 ```
 
 - 原 SHA256：`9a5549beb15a`
@@ -125,8 +125,8 @@ record_id: <legacy_record_id>
 `research_39kdtecq1b21n`
 
 ```text
-财富/投研/研究/2026-08-20-111123-stock-sh600585.md
-→ 财富/投研/标的/sh600585/research/2026-08-20-111123-stock-sh600585.md
+13-财富/投研/研究/2026-08-20-111123-stock-sh600585.md
+→ 13-财富/投研/标的/sh600585/research/2026-08-20-111123-stock-sh600585.md
 ```
 
 - 原 SHA256：`be1b7d1a519c`
@@ -136,8 +136,8 @@ record_id: <legacy_record_id>
 `research_ned97lvj3am5`
 
 ```text
-财富/投研/研究/2026-08-21-172608-stock-sh600585.md
-→ 财富/投研/标的/sh600585/research/2026-08-21-172608-stock-sh600585.md
+13-财富/投研/研究/2026-08-21-172608-stock-sh600585.md
+→ 13-财富/投研/标的/sh600585/research/2026-08-21-172608-stock-sh600585.md
 ```
 
 - 原 SHA256：`34adb0322a3a`
@@ -147,8 +147,8 @@ record_id: <legacy_record_id>
 `research_ac9t5mjyab30`
 
 ```text
-财富/投研/研究/2026-08-22-220341-stock-sh600585.md
-→ 财富/投研/标的/sh600585/research/2026-08-22-220341-stock-sh600585.md
+13-财富/投研/研究/2026-08-22-220341-stock-sh600585.md
+→ 13-财富/投研/标的/sh600585/research/2026-08-22-220341-stock-sh600585.md
 ```
 
 - 原 SHA256：`7aa624a3fbe2`
@@ -160,8 +160,8 @@ record_id: <legacy_record_id>
 `research_14sgf2axy4j13`
 
 ```text
-财富/投研/研究/2026-08-20-105323-stock-hk00700.md
-→ 财富/投研/标的/hk00700/research/2026-08-20-105323-stock-hk00700.md
+13-财富/投研/研究/2026-08-20-105323-stock-hk00700.md
+→ 13-财富/投研/标的/hk00700/research/2026-08-20-105323-stock-hk00700.md
 ```
 
 - 原 SHA256：`3766c649e1fe`
@@ -173,8 +173,8 @@ record_id: <legacy_record_id>
 `research_1zdph26uncb2m`
 
 ```text
-财富/投研/研究/2026-08-20-183444-stock-sz000651.md
-→ 财富/投研/标的/sz000651/research/2026-08-20-183444-stock-sz000651.md
+13-财富/投研/研究/2026-08-20-183444-stock-sz000651.md
+→ 13-财富/投研/标的/sz000651/research/2026-08-20-183444-stock-sz000651.md
 ```
 
 - 原 SHA256：`1444ed99f6f4`

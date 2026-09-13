@@ -56,7 +56,7 @@ App 消息中心
 复查任务和计划状态保存在 `personal-os` 的 SQLite 运行态，消息由研究卡
 相邻版本差异重建。
 
-投研产物统一位于 `财富/投研/`。SQLite、HTML 缓存、运行日志和任务状态不进入 durable 资产目录。
+投研产物统一位于 `13-财富/投研/`。SQLite、HTML 缓存、运行日志和任务状态不进入 durable 资产目录。
 
 ### 3.2 personal-os
 
@@ -96,7 +96,7 @@ created_at
 updated_at
 ```
 
-当前实现以 `财富/投研/观察池/**` 中的观察池条目和
+当前实现以 `13-财富/投研/观察池/**` 中的观察池条目和
 `review_schedule` 为配置来源；`last_review` / `next_review` 的复查状态
 由 `personal-os` ReviewService 运行态单独保存，不维护 `current_version_id`
 和 `alert_policy` 这些独立字段。
