@@ -32,6 +32,9 @@ build/
 __pycache__/
 .pytest_cache/
 
+# 图片/视频生成产物（一次性试验品，非工作区内容）
+/generated-images/
+
 # macOS / editor
 .DS_Store
 *.swp
