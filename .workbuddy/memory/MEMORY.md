@@ -6,11 +6,21 @@
   启动任何本地服务都加 `NO_PROXY=127.0.0.1,localhost`；curl 探测加 `--noproxy '*'`。
 - **personal-os API 默认端口是 7001**（不是 7100/3000）；agent 是 7101。Go 在 `/usr/local/go/bin/go`（不在 PATH）。
   首次启动前需 `npm install`（`personal-os/tools/westock-runtime`），否则 westock CLI 检查失败直接 exit 1。
-- **personal-os 的 vault 写入会 `git fetch/push`**：对真实 `personal-assets`（有 GitHub SSH remote）会挂死在主机密钥确认，
-  并泄漏 `assetstore.lock`。**联调/测试**一律用**无 remote 的临时副本** + 独立 runtime 目录，复制 assets 用 `tar`
-  （`cp -R`/`rsync` 会因非 UTF8 文件名失败）。**真实使用**（App/Web 日常）才指向真实 vault。
+- **personal-os 的 vault 写入会 `git fetch/push`**：**联调/测试**一律用**无 remote 的临时副本** + 独立 runtime 目录，
+  复制 assets 用 `tar`（`cp -R`/`rsync` 会因非 UTF8 文件名失败）。**真实使用**（App/Web 日常）才指向真实 vault。
+- ⚠️ **vault 锁被 git 卡死的真实机制**（2026-09-27 实测，已修）：vault 写入全程在 `WithLock` 内，而 `runGit` 原本
+  **没有超时、ssh 是交互式的**。ssh 遇到未知 host key 会打开 `/dev/tty` 等人确认 → 一个 `memory.sync` 把
+  `assetstore.lock` 占了 **90 分钟**，之后所有写入都 409/503。
+  修法（`packages/assetstore/assetstore.go`，commit e573027）：所有 git 调用默认
+  `GIT_TERMINAL_PROMPT=0` + `GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=15 …"`，
+  并加 120s 硬超时（`PERSONAL_OS_GIT_TIMEOUT_SEC` 可调）。**排查手法**：`lsof -p <api_pid> -a -d <fd>`
+  看到 `.lock` 还开着 → `lsof | grep <pipe_addr>` 能揪出挂起的 `ssh …git-upload-pack`；`kill` 掉它，锁立即释放。
 - `assetstore.lock` 用的是 `flock`（`packages/assetstore/assetstore.go::acquireLock`），进程退出内核自动释放，
   **文件里残留的 pid/内容只是观测信息，不需要手动删**；只有 flock 被活进程持有时才会 409。
+- ⚠️ **从 WorkBuddy 会话启动的 API 读不到 `~/.ssh/known_hosts`**：进程继承沙箱（fd 里带
+  `~/.workbuddy/logs/sandbox/...log`），ssh 报 `hostkeys_foreach failed … Operation not permitted` /
+  `Host key verification failed` → **vault 写入全部失败**（修复后是快速失败，不再挂死）。
+  要从"能写 vault"的状态跑，需**用户在普通 Terminal 里**执行 `cd personal-os && ./tools/dev`。
 - **一键联调**：`bash personal-agent/scripts/e2e-app.sh`（拉起两个服务 + 黑盒断言），检查逻辑在 `scripts/e2e_app_check.py`。
   它的 `E2E_ASSETS_PATH` 默认 `/private/tmp/e2e-assets`（无 remote 副本），可用 `E2E_ASSETS_PATH` 覆盖。
 - **官方启动器是 `personal-os/tools/dev`**（同时托管 API + agent，API_BIN 在 `/private/tmp/personal-os-dev/personal-os-api`）：
