@@ -1,11 +1,15 @@
 # personal-agent 架构核查与长期加固计划
 
-> 状态：已核查，待按 P0/P1/P2 实施
+> 状态：审计结论大部分已在后续 Runtime 加固中落地；本文保留剩余交叉验证与长期演进项
 > 日期：2026-09-01
 > 范围：`personal-agent`（只读审查），结论归档于 `personal-system`
 > 基线：`master@9e30f61`
 
 ## 1. 核查结论
+
+> 本文基线为 2026-09-01，早于后续 Runtime、Memory 和 Agent-as-Tool 加固。
+> 下方缺陷清单是审计证据，不应直接视为当前未修复项；当前项目进度以
+> `docs/project-progress.md`、最新提交和 focused acceptance 结果为准。
 
 完整测试结果为 `876 passed, 11 skipped, 11 warnings`。测试全绿只说明已有测试覆盖的路径稳定，不能覆盖审批快照、DAG 重启恢复、并行审批和 Runtime 真流式等交叉路径。
 
