@@ -6,7 +6,7 @@
 
 ## 工作区原则
 
-- 长期维护项目都收敛到 `/Users/qiang.lilq/personal-system` 下。
+- 长期维护项目都收敛到当前工作区（双机路径不同：本机 `/Users/liqiang/code/personal-system`，另一台 `/Users/qiang.lilq/personal-system`）下。
 - 顶层 Git 只跟踪 workspace 治理材料、配套文档和图表源文件，不跟踪子项目源码。
 - 子项目独立 Git 跟踪，不使用 submodule。
 - 顶层 Git 不跟踪子项目源码目录、cache、SQLite、logs、`.env`、`node_modules`、`dist` 等运行态。

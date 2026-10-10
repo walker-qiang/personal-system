@@ -39,3 +39,6 @@ __pycache__/
 .DS_Store
 *.swp
 *.swo
+
+# Obsidian 本地 UI 状态（双机同步会互相覆盖，产生冲突噪音；配置类文件保留）
+.obsidian/workspace.json

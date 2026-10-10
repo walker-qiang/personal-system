@@ -1,6 +1,6 @@
 # 目标项目进度
 
-本文档记录 `/Users/qiang.lilq/personal-system` 下长期目标项目的建设进度。
+本文档记录 personal-system 工作区（双机路径不同：`/Users/liqiang/code/personal-system` 与 `/Users/qiang.lilq/personal-system`）下长期目标项目的建设进度。
 
 这里的“目标项目”只包括长期维护对象。历史项目只作为迁移来源，不进入主进度表。
 

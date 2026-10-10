@@ -1,4 +1,5 @@
 schema_version: 1
+# 双机实际路径不同：本机 /Users/liqiang/code/personal-system；另一台 /Users/qiang.lilq/personal-system
 root: /Users/qiang.lilq/personal-system
 policy:
   top_level_git_role: workspace-governance
@@ -47,7 +48,7 @@ projects:
     status: active
     completion: active
     long_term: true
-    current_path: /Users/qiang.lilq/personal-system/personal-tools
+    current_path: /Users/qiang.lilq/personal-system/personal-tools  # 双机路径不同，另一台为 /Users/liqiang/code/personal-system/personal-tools
     role: reusable personal tool repo; current inventory is the weixin-clip Chrome extension and workspace-git-delivery Codex skill
     next: finish real-page acceptance for weixin-clip and keep the workspace-git-delivery global Codex symlink aligned with its source
 migration_sources:
