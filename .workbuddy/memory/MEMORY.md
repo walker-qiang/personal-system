@@ -34,6 +34,11 @@
   vault 文件路径是 `92-系统/memory/{user}.json`。
 
 ## personal-system 架构要点（跨会话复用）
+- ⚠️ **UI 入口只有 macOS App（`/Applications/筋斗云.app`，连 127.0.0.1:7001），没有 Web App**：
+  `apps/web` 已于 `f355de1`（2026-08-28）从 git 删除，磁盘上（含 9-27 残留的 `dist/`）也已不存在；
+  `tools/web-preview.py` 已无托管对象、不可用。做架构汇总前必须核对当前磁盘 + git log，
+  **不要照搬旧日志里的组件清单**（2026-10-10 曾因此画出过时的 Web 预览节点被用户纠正）。
+  源码仅存于 git 历史（`1ba8b85^`..`f355de1^`）。
 - `personal-assets` 是 Durable Source of Truth；`personal-os`(Go API+macOS App) 与 `personal-agent`(Python LangGraph runtime) 都是消费方。
 - **personal-agent memory_sync**：`config.py` 默认 `memory_sync_path = personal-agent/../personal-assets/92-系统/memory`
   （不是 `personal-assets/system/memory`；`92-系统/memory` 才是真实目录）。启动时 `sync_profile_from_file`（`store.py`）
