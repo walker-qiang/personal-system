@@ -42,3 +42,6 @@ __pycache__/
 
 # Obsidian 本地 UI 状态（双机同步会互相覆盖，产生冲突噪音；配置类文件保留）
 .obsidian/workspace.json
+
+# mac UI e2e 测试产物（一次性验收报告，不入库）
+/e2e-test-report/
