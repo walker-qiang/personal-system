@@ -8,6 +8,7 @@
 2. [personal-system 架构图](architecture-diagrams.md)：全景、运行拓扑、`personal-agent`、`personal-os` 和写回时序。
 3. [personal-os V1 迁移边界](../personal-os/docs/migration-boundary.md)：约束当前产品实现范围。
 4. [目标项目进度](project-progress.md)：各长期仓库和迁移来源的当前状态。
+5. [已知问题清单](known-issues.md)：已核实的待办问题台账（含证据与建议动作）。
 
 长期目标不自动扩大 V1：当前 `personal-os` 是投资快照、投研数据和个人助理工作台；broader knowledge 主要通过 Obsidian 维护。
 
@@ -19,12 +20,14 @@
 
 ## 子系统设计
 
-1. [标的优先的投研信息架构设计](plans/2026-08-23-target-centric-investment-information-architecture-design.md)
-2. [研究卡标的目录迁移 Dry-run](plans/2026-08-23-research-card-target-migration-dry-run.md)
+1. [标的优先的投研信息架构设计](archive/plans/2026-08-23-target-centric-investment-information-architecture-design.md)
+2. [研究卡标的目录迁移 Dry-run](archive/plans/2026-08-23-research-card-target-migration-dry-run.md)
 3. [personal-agent 系统架构](../personal-agent/docs/architecture.md)
 4. [Agent Runtime 与质量门禁](../personal-agent/docs/quality-gate-plan.md)
-5. [投研数据层自动化闭环设计](plans/2026-08-21-personal-assets-automated-investment-research-loop-design.md)
-6. [架构边界收口设计与实施](plans/2026-08-21-personal-system-architecture-boundary-hardening-design.md)
+5. [投研数据层自动化闭环设计](archive/plans/2026-08-21-personal-assets-automated-investment-research-loop-design.md)
+6. [架构边界收口设计与实施](archive/plans/2026-08-21-personal-system-architecture-boundary-hardening-design.md)
+
+以上 1、2、5、6 项均已实施并归档，仅用于追溯；当前规范仍以第 1、4 小节为准。
 
 ## 归档文档
 

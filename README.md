@@ -33,6 +33,7 @@
 - [AssetStore 协议](docs/assetstore-protocol.md)
 - [Finance Fact Model V1](docs/finance-fact-model-v1.md)
 - [投研质量闸门进展](docs/research-quality-gate-progress.md)
+- [已知问题清单](docs/known-issues.md)
 - [历史文档归档](docs/archive/README.md)
 
 V1 实现边界以 [personal-os/docs/migration-boundary.md](personal-os/docs/migration-boundary.md) 为准。

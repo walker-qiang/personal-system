@@ -314,7 +314,7 @@ Projection 必须记录来源文件、版本和必要的 source span，不能成
 解耦。历史迁移曾将 8 张 schema v2 研究卡移入标的目录，后续已在
 2026-08-30 的 A 股质量观察池重建中清理；当前存量以 `personal-assets` 工作树
 为准。完整设计和迁移顺序见
-[`2026-08-23-target-centric-investment-information-architecture-design.md`](plans/2026-08-23-target-centric-investment-information-architecture-design.md)。
+[`2026-08-23-target-centric-investment-information-architecture-design.md`](archive/plans/2026-08-23-target-centric-investment-information-architecture-design.md)（已实施并归档）。
 
 ### 7.3 Operational Runtime State
 

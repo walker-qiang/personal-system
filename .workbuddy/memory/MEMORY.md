@@ -24,7 +24,7 @@
 - **一键联调**：`bash personal-agent/scripts/e2e-app.sh`（拉起两个服务 + 黑盒断言），检查逻辑在 `scripts/e2e_app_check.py`。
   它的 `E2E_ASSETS_PATH` 默认 `/private/tmp/e2e-assets`（无 remote 副本），可用 `E2E_ASSETS_PATH` 覆盖。
 - **官方启动器是 `personal-os/tools/dev`**（同时托管 API + agent，API_BIN 在 `/private/tmp/personal-os-dev/personal-os-api`）：
-  1. **必须先有 `personal-os/.env`**，否则 `start_api` 里无条件的 `source "$ENV_FILE"` 直接失败、API 起不来（仓库里没有 `.env.example`）。
+  1. **必须先有 `personal-os/.env`**，否则 `start_api` 里无条件的 `source "$ENV_FILE"` 直接失败、API 起不来。仓库已于 2026-10-11（`0c11c1a`）加入双机 `.env.example`，先 `cp .env.example .env` 再启动。
   2. 从 WorkBuddy 会话里执行 `./tools/dev`（launchd 模式）会 **`launchctl submit` 返回 rc=1 静默失败**，
      进程还会随命令结束被杀；可行做法是 `./tools/dev --foreground` 配 `run_in_background=true`。
      想要 launchd 托管需用户在自己的 Terminal 里执行。
@@ -33,12 +33,27 @@
 - agent HTTP 契约易错点：`POST /chat`（无 `/api` 前缀）、`/memory/list` 返回字段是 `memories`、登录响应字段是 `token`、
   vault 文件路径是 `92-系统/memory/{user}.json`。
 
+## 判断"最新代码"的正确姿势（2026-10-13 踩坑，必读）
+- **不要用本地 HEAD 的提交日期判断是否最新**。必须同时看：`git status -sb`（ahead/behind）、
+  `git log -1 --oneline origin/master`、`git reflog show origin/master`（最后一次成功 fetch 的时间）。
+- 2026-10-13 实测：`personal-agent` 本地 master 曾长期停在与 origin 分叉的旧血统 `d6e16aa`，
+  **缺全部 10 月工作**（`git diff --stat 49d4172 d6e16aa` = 60 文件 +1238/−4580，缺 `stock_research.py`、`plan_validator.py`、JSON Schema 批次，多出已废弃的 `llm/codex_cli.py`）；
+  21:30 一次 `git pull --rebase` 才收口到 `origin/master` `49d4172`。而 `origin/master` 本地记录在 10-11 21:12 就已指向新头，
+  即这次落后**当天就能发现**。双机工作区极易出现"本地干净、其实落后远端"的状态。
+- 各仓最后一次成功 fetch（2026-10-13 复核）：顶层 / `personal-os` / `personal-agent` = 2026-10-11；
+  **`personal-assets` / `personal-tools` = 2026-09-27**，这两仓的"最新"在本机无法确认。
+- 已核实的待办问题台账在 `docs/known-issues.md`（KI-01..KI-10），新发现的问题往那里记，不要只写在日志里。
+- 沙箱环境：`~/.cache/uv` 不可写且无外网 → 离线装依赖用
+  `cp -R ~/.cache/uv/. /tmp/uv-cache/` + `UV_CACHE_DIR=/tmp/uv-cache uv sync --offline --frozen`（用完删副本）；
+  `rag` extra（torch / networkx / chromadb）不在缓存里，装不上。
+- `perl -e 'alarm N; exec @ARGV'` 给 `git fetch` 限时**无效**（exec 后 alarm 失效、会挂住），要限时用 `perl -e 'alarm N; system @ARGV'`。
+
 ## personal-system 架构要点（跨会话复用）
 - ⚠️ **UI 入口只有 macOS App（`/Applications/筋斗云.app`，连 127.0.0.1:7001），没有 Web App**：
-  `apps/web` 已于 `f355de1`（2026-08-28）从 git 删除，磁盘上（含 9-27 残留的 `dist/`）也已不存在；
-  `tools/web-preview.py` 已无托管对象、不可用。做架构汇总前必须核对当前磁盘 + git log，
-  **不要照搬旧日志里的组件清单**（2026-10-10 曾因此画出过时的 Web 预览节点被用户纠正）。
-  源码仅存于 git 历史（`1ba8b85^`..`f355de1^`）。
+  `apps/web` 源码已于 `f355de1`（2026-08-28）从 git 删除，仅存于 git 历史（`1ba8b85^`..`f355de1^`）。
+  **磁盘上仍有 `personal-os/apps/web/`，但只剩 gitignored 的 `dist/` + `node_modules/` 残留**（2026-10-13 复核，
+  `git ls-files apps/web` 为空），不是可运行入口；`tools/web-preview.py` 无托管对象、不可用。
+  做架构汇总前必须核对当前磁盘 + git log + `git ls-files`，**不要照搬旧日志里的组件清单**（2026-10-10 曾因此画出过时的 Web 预览节点被用户纠正）。
 - `personal-assets` 是 Durable Source of Truth；`personal-os`(Go API+macOS App) 与 `personal-agent`(Python LangGraph runtime) 都是消费方。
 - **personal-agent memory_sync**：`config.py` 默认 `memory_sync_path = personal-agent/../personal-assets/92-系统/memory`
   （不是 `personal-assets/system/memory`；`92-系统/memory` 才是真实目录）。启动时 `sync_profile_from_file`（`store.py`）
