@@ -48,6 +48,18 @@
   `rag` extra（torch / networkx / chromadb）不在缓存里，装不上。
 - `perl -e 'alarm N; exec @ARGV'` 给 `git fetch` 限时**无效**（exec 后 alarm 失效、会挂住），要限时用 `perl -e 'alarm N; system @ARGV'`。
 
+## personal-assets vault 同步状态（2026-10-14 凌晨，必读）
+- 本机 vault 曾**落后远端 71 个提交**（远端 tip `c590a01`，本机停在 `dddb269` = 2026-09-27）。10-14 00:28 已取回 **70/71** 并 `git merge --ff-only` 把本地 HEAD 推进到 **`1c84e25`**（10-13 知识总纲）；10-10～10-13 的估值快照等已可用。
+- **只剩 `c590a01`**（下载的投资理财学习原文 + CHFP 资料清单，含 PDF，本批最大）在后台反复重试：
+  `nohup bash personal-assets/.git/dsh-fetch-vault.sh &`（脚本持久副本在 `.git` 内，不入库；日志 `/tmp/assets-overnight.log`）。
+  成功后脚本自动 `git fetch --prune origin master` + `git merge --ff-only origin/master` → HEAD 变 `c590a01`。
+- ⚠️ 在 `c590a01` 落地前：**不要 push `personal-assets`**；且 `git status -sb` 会显示 `ahead 70`，那是**假象**（本机 `refs/remotes/origin/master` 仍是旧值 `dddb269`，git 不允许把 ref 指向尚未存在的对象）——真实是 behind 1。
+- ⚠️ 慢链路上大传输必挂：单次 `git pull` 跑了 62 分钟后 `early EOF` 全废。正确姿势是**按提交逐个取 + 进度 ref**：
+  `git fetch --no-tags origin <sha>` 的对象**不挂 ref**，服务端下次谈判会重复发送（曾一次要传 6405 个对象）；
+  每取一个就 `git update-ref refs/fetch/progress <sha>`（**不要放 `refs/heads/*`**，否则 `git push --all` 会把这个临时分支推上去），
+  再配短超时（150-180s）+3 次重试+多轮棘轮 → 实测 ~6 秒/提交。
+- 收尾清理：`git gc` 前先看 git 自己的 `warning: garbage found: .git/objects/pack/tmp_pack_*`，被杀掉的 fetch 会留下大量残片（本次清掉 421MB）。
+
 ## personal-system 架构要点（跨会话复用）
 - ⚠️ **UI 入口只有 macOS App（`/Applications/筋斗云.app`，连 127.0.0.1:7001），没有 Web App**：
   `apps/web` 源码已于 `f355de1`（2026-08-28）从 git 删除，仅存于 git 历史（`1ba8b85^`..`f355de1^`）。
