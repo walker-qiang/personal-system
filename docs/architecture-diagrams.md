@@ -4,6 +4,8 @@
 >
 > 基线日期：2026-08-31
 >
+> 运行拓扑校准：2026-10-22，正常产品服务由 App 托管；研究采用主动触发的 V3。
+>
 > 范围：`personal-system`、`personal-assets`、`personal-os`、`personal-agent`、`personal-tools`
 
 本文用多个较小视角呈现当前系统，而不是把产品边界、进程拓扑和代码组件挤在一张图里。
@@ -37,8 +39,10 @@
 
 [Mermaid 源文件](diagrams/personal-system-runtime.mmd)
 
-当前 API 和 Agent 由 `launchd` supervisor 管理。macOS App 可以退出，但 Go API、
-Python Agent 和 ReviewService 可以继续运行。`personal-os var/` 与 `personal-agent var/`
+正常使用由 macOS App 托管前台 supervisor；退出 App 会停止其托管的 Go API、
+Python Agent 和 ReviewService。开发者显式运行 `tools/dev` 时仍可使用独立的
+`launchd` 后台模式。股票和基金模型研究由用户主动触发，低成本提示不调用模型。
+`personal-os var/` 与 `personal-agent var/`
 中的 SQLite、索引、trace、cache 和 lock 均为可重建或可丢弃运行态，不能取代
 `personal-assets`。`finance.sqlite` 由 `personal-os` 构建，同时保留给
 `personal-agent finance.*` 工具只读查询的兼容路径。

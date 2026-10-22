@@ -2,8 +2,10 @@
 
 本文档记录 personal-system 工作区（双机路径不同：`/Users/liqiang/code/personal-system` 与 `/Users/qiang.lilq/personal-system`）下长期目标项目的建设进度。
 
-> 最近核实：2026-10-13（本机 `/Users/liqiang/code/personal-system`）。
-> 核实方式：`git log` / `git reflog show origin/master`、`go build|vet|test ./...`（personal-os）、`pytest -q`（personal-agent）。
+> 最近核实：2026-10-22（本机 `/Users/qiang.lilq/personal-system`）。
+> 核实方式：Git 状态与远端同步、进程/端口、只读任务统计、Go 测试/静态检查、Agent 默认测试与隔离协议验收、跨仓隔离验收、macOS App Build 与部署。
+> 详细命令和限制见 [本轮验证记录](plans/2026-10-22-v3-stability-and-workspace-status.md)。
+> 本机各仓已 fetch 并完成所需推送；该状态不代表另一台电脑已同步。
 > 已核实但未处理的待办问题见 [已知问题清单](known-issues.md)。
 
 这里的“目标项目”只包括长期维护对象。历史项目只作为迁移来源，不进入主进度表。
@@ -20,11 +22,11 @@
 
 | 项目 | 目标定位 | 当前状态 | 已完成 | 未完成 | 下一步 |
 | --- | --- | --- | --- | --- | --- |
-| `personal-system` | 顶层 workspace / governance 仓，维护系统规则、规划、迁移台账和项目清单。 | `usable` | 已初始化顶层 Git 仓；已建立 `README.md`、`AGENTS.md`、`.gitignore`、`workspace.yaml`；已明确子项目独立 Git、不使用 submodule；已配置 Git remote；已归档已实施 plans、e2e 报告出库（`2d661ed`，2026-10-11）；已建立[已知问题清单](known-issues.md)。 | 项目进度需要持续维护；顶层历史规划文档仍有部分英文和较宽泛表述。 | 维护本文档、`workspace.yaml` 和已知问题清单；按需推送远端备份。 |
-| `personal-assets` | durable source of truth，保存 finance facts 和 broader personal assets。 | `stable` | 已完成 `obsidian-wiki -> personal-assets` 迁移收口；`13-财富/` 已成为最终物理目录；已有 finance 目录、schemas、targets、事实文件；历史研究卡标的目录迁移已在 `47cd12a` 完成，后续 A 股质量观察池重建提交 `87622d8` 清理了该批历史卡；当前新研究卡继续按稳定标的 ID 写入并保留 legacy 路径兼容读取；作为 `personal-os` cache rebuild 来源已跑通；Vault 轻量校验通过。 | `21-知识/` 仍可随日常使用继续补强；海螺水泥标的目录暂缺 profile；历史归档文档中仍可能保留少量旧术语；**本机 HEAD 为 `dddb269`（2026-09-27），自 2026-09-27 起本机未成功 fetch，10 月提交情况以远端/另一台机器为准**（KI-07）。 | 以 `personal-assets` 作为唯一主目录继续维护；先在另一台机器或有网环境核对远端是否领先；按实际使用补齐海螺水泥 profile、强化 `21-知识/` 并清理历史文档。 |
-| `personal-os` | V1 为投资快照、投研数据和个人助理工作台，以及统一产品/API 入口；通过 HTTP/SSE 使用独立 `personal-agent`。 | `usable` | 已完成 finance cache builder、研究数据层、官方事实对账、研究卡质量闸门、观察池/基金池操作、估值快照、单资产持仓收益分析与本地自动历史、收益历史固定到标的 Vault、稳定 research record ID、标的目录新写入与新旧双路径读取、AssetStore 共享锁/路径校验/限定提交和按 operation 发布、受控 Memory/Skill Vault API、持久化 ReviewService、任务重试、macOS App 和 Agent proxy；自动投研在 App 关闭后仍由 launchd 后台服务运行；旧 `apps/agent` fallback 已删除；2026-10-11 补齐双机 `.env.example` 模板（`0c11c1a`）与 smoke 脚本 GOMODCACHE 可覆盖（`8f45c00`）；2026-10-13 本机 `go build/go vet/go test ./...` 全绿。 | 自动投研仍需长期观察消息质量、失败重试和真实复查成本；legacy 平铺研究卡读取暂保留兼容；跨资产组合核算和更多成本口径尚未建设；本机服务栈当前未运行（KI-09）。 | 运行并观察自动投研与标的目录读写稳定性，评估跨资产组合核算和更多成本口径，再评估移除 legacy 读取。 |
-| `personal-agent` | 独立 Python Agent Runtime 与 chat/tool 服务；借鉴 Pi 的内核分层，Runtime Core 严格下层化。 | `usable` | 已完成独立 Runtime domain/ports/core、SQLite operations/events/approvals/session entries、HITL 跨重启恢复、单 Agent/DAG/Agent-as-Tool Runtime、Codex 与 Deep Research Runtime adapter、模型重试失败收尾和研究质量闸门；Memory/Skill durable mutation 已改为调用 `personal-os` 受控 Vault API；Vault memory 已完成 typed profile round-trip；10 月主线为 stock v3 结构化投研路由（`src/matrix/server/routes/stock_research.py`，`/api/research/stock.v3`）与 JSON Schema 结构化输出（`llm/protocol.py`、`llm/deepseek.py`）；已在本地完成记忆抽取 skip 门控（`49d4172`）；2026-10-13 本机 `pytest -q` 为 926 passed（14 项因缺可选 `rag` extra 无法判定，KI-08）。 | Provider、评估稳定性和恢复体验仍需持续加固；**本机曾停在与 origin 分叉的旧血统（缺全部 10 月工作），2026-10-13 已收口到 `origin/master` `49d4172`，本地 3 个提交中 2 个已在上游、1 行注释改动丢失且上游已无该配置块**；文档已对齐代码（KI-03、KI-04、KI-10 已修，KI-05 已注释说明）。 | 保持 durable write 边界，继续 provider/recovery hardening；在有网环境补 `rag` extra 后重跑全量测试。 |
-| `personal-tools` | 长期复用工具仓；当前只维护 `weixin-clip` Chrome 扩展和 `workspace-git-delivery` Codex Skill。 | `active` | `582524e` 已移除旧 wiki-search、launchd 和通用脚本；`weixin-clip` 已到 v0.5.0 并通过静态/Manifest 校验，**另一台电脑真实页面验收通过，本机已完成安装**（系统 Chrome 扩展注册已验证并持久化，扩展 ID `bcojpifjemogiaacpobbfflicofghpii`）；Git delivery Skill 源码在 `personal-tools/skills/workspace-git-delivery`，符号链接安装于 `~/Doubao/skills/workspace-git-delivery`（本机豆包可用；另一台电脑为 Codex 全局安装）。 | 本机首次剪藏使用前需在扩展选项页授权保存目录（`personal-assets/20-资料/文章/`）；Skill 继续随实际交付流程校准；本机 HEAD 为 `db50105`（2026-09-14），自 2026-09-27 起未成功 fetch（KI-07）。 | 首次使用 `weixin-clip` 时授权保存目录并验证落盘；保持 Skill 符号链接与仓库源码一致。 |
+| `personal-system` | 顶层 workspace / governance 仓，维护系统规则、规划、迁移台账和项目清单。 | `usable` | 子项目独立 Git、remote、文档归档及问题台账已建立；本轮按当前源码纠正主动研究与 App 生命周期描述，并区分本机和另一台电脑的核实记录。 | 需持续维护状态，避免把旧验收、历史任务和本地 remote-tracking ref 当作当前运行证据。 | 按里程碑更新本文档、`workspace.yaml` 和问题台账。 |
+| `personal-assets` | durable source of truth，保存 finance facts 和 broader personal assets。 | `stable` | `obsidian-wiki` 迁移及 `13-财富/` 目录收口完成；历史卡、V3 Thesis/evidence/episode 与收益固定结果按稳定标的目录保存。当前本机 HEAD 为 `8c83091`，已推送且工作区干净。 | 海螺水泥 `sh600585` 目录仍无 profile；日常知识完善及历史术语清理按实际使用推进。另一台电脑的旧同步问题不代表本机状态。 | 保持唯一事实源；不自动迁移、重跑研究或写回。 |
+| `personal-os` | 投资快照、投研和个人助理工作台；统一产品/API 与 durable write 入口。 | `usable` | 当前 HEAD `ae628d7`；已有 finance cache、受控写入、单资产收益、收益历史和 Agent proxy；股票/基金统一 V3，新增研究前预检、官方来源优先检索、自动补查与诊断展示。App/API 已按当前工作区构建并安装，启动健康检查通过。Go 测试/静态检查、App Build 与跨仓隔离验收通过。 | 最新修复后的真实 V3 连续复查待授权；研究证据缺口继续保留。组合级核算、更多成本口径仍是后续需求；legacy 历史读取保留。 | 按授权范围、资料权限和预算验证真实 V3 连续研究；不恢复全池自动模型研究。 |
+| `personal-agent` | 独立 Python Agent Runtime、chat/tool 服务和研究执行能力，Runtime Core 严格下层化。 | `usable` | 当前 HEAD `97fec2c`；Runtime journal、审批/恢复、记忆治理和受控 Vault API 边界已建立；统一 investment V3 支持两阶段综合、有界修复、预算、精确引用与诊断脱敏。默认测试 `927 passed, 20 deselected`，协议及跨仓隔离验收通过。 | 最新引用修复的真实模型效果与成本尚未复查；可选 RAG 集成能力本轮未重跑，不等同于默认测试失败。 | 保持所有 durable write 经过 `personal-os`，以指定标的验证引用修复和恢复体验，不自动增加预算或调用次数。 |
+| `personal-tools` | 长期复用工具仓；当前维护 `weixin-clip` 和 `workspace-git-delivery`。 | `active` | 当前 HEAD `db50105`，工作区干净；扩展 v0.5.0 和 Git delivery Skill 已有。历史进度记录另一台电脑已完成真实页面验收。 | 扩展 README 的真实验收日期和清单仍未补齐，与历史进度记录不一致；本轮未操作 Chrome，未重新核实本机目录授权或全局 Skill 安装。 | 经确认后补齐本机真实页面验收并统一记录；保持 Codex 全局 Skill 以符号链接指向源码。 |
 
 ## 迁移来源项目
 

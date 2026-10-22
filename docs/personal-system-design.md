@@ -4,6 +4,8 @@
 >
 > 基线日期：2026-08-31
 >
+> 当前实现校准：2026-10-22。股票/基金研究采用 manual-first V3，正常使用的服务生命周期由 App 托管。
+>
 > 适用范围：`personal-system`、`personal-assets`、`personal-os`、`personal-agent`、`personal-tools`
 >
 > 当前产品边界：`personal-os` V1 以投资快照、投研数据和个人助理工作台为主，长期设计不自动扩大当前实现范围。
@@ -142,8 +144,8 @@ Obsidian 目前仍是 broader knowledge 的主要人工编辑入口。
 - Go API；
 - finance cache 和确定性计算；
 - asset、snapshot、transaction 和 allocation target 等窄结构化写入；
-- 研究数据、研究卡、估值快照、观察池和基金池的受控 API 工作流；
-- 持久化自动投研 ReviewService、任务状态和失败退避；
+- 研究数据、V3 Thesis/evidence/episode、历史研究卡、估值快照、观察池和基金池的受控 API 工作流；
+- 持久化 ReviewService、已确认研究计划的执行/恢复、低成本提示和失败退避，不自动对股票/基金发起模型研究；
 - Memory/Skill operation-specific Vault API；
 - AssetStore 写入协议；
 - Agent Gateway，以及面向 Agent 的受控 Tool Provider；
@@ -249,7 +251,14 @@ flowchart TD
     VAULT -->|"rebuild"| FDB
 ```
 
-当前 API 和 Agent 由 launchd supervisor 持续运行，macOS App 是可退出的产品客户端；关闭窗口不停止自动投研。系统同一时刻只面向一个登录用户，但允许不同时间由不同用户登录。会话和 Runtime operation 使用不透明的 `owner_id` / `session_id` 做运行态关联；Vault 仍是该安装节点的个人资产边界，不按公共 SaaS 多租户设计。
+正常产品使用由 macOS App 托管前台 supervisor；退出 App 会停止其托管的 API、Agent、
+ReviewService 及子进程，重新打开后恢复。开发者显式运行 `tools/dev` 时仍可使用
+launchd 后台模式，不能把该开发入口描述为 App 的默认生命周期。
+
+股票和基金统一采用 manual-first V3：低成本提示不调用模型，主动研究绑定不可变计划、
+资料权限和模型预算；恢复已确认任务不等于新建自动研究。系统同一时刻只面向一个登录
+用户。会话和 Runtime operation 使用不透明的 `owner_id` / `session_id` 做运行态
+关联；Vault 不按公共 SaaS 多租户设计。
 
 ## 6. 严格依赖方向
 
@@ -651,7 +660,7 @@ Spaces
 | AgentMode / Preset | 基础策略已实现 | 已有 `read_only`、受审批保护的 `writeback` 和基础 preset；Runtime 只执行应用层解析后的策略 |
 | Agent durable write | 受控开放 | 当前仅开放 `finance.snapshot.create` 的 plan → approval → execute 链路；不等于开放任意 Vault 写入 |
 | Memory / Skill durable write | 已收口 | Agent 请求经 `personal-os /api/vault/*` 和 AssetStore commit/push，不直接写 Vault |
-| Investment ReviewService | 已实现 | SQLite 持久化任务、到期扫描、全局串行执行、失败退避和研究卡写回 |
+| Investment ReviewService | 已实现 | 主动触发的股票/基金 V3 计划、SQLite 持久化任务、串行执行、恢复和受控写回；到期扫描只产生低成本提示 |
 | Generic Semantic Projection | 未形成系统边界 | Agent 内有 RAG/Graph 能力，但不是 canonical projection |
 | New / Changed engine | 投资场景已实现 | 研究卡相邻版本差异生成消息投影；通用 Changes engine 尚未实现 |
 | Generic Decision Service | 未实现 | 有投研和 Decision Skill 资产，但无通用服务 |
@@ -693,8 +702,9 @@ investment、memory、skill 使用 operation-specific 写入。需要远端发�
 
 ### 15.8 Managed Process Lifecycle
 
-API 和 Agent 已由 launchd supervisor 持续运行，App 退出不停止 ReviewService。
-日志消费、失败告警和正式发布打包仍需继续产品化。
+正常使用由 App 托管 API 和 Agent，退出 App 会停止其托管栈；`tools/dev` 的显式
+launchd 后台模式用于独立开发。安装包的源码版本溯源、日志消费和发布验证仍需继续
+完善，源码验收通过不能替代安装包与真实模型效果验证。
 
 ## 16. 演进路线
 
@@ -751,7 +761,7 @@ ProvenanceService
 - `AssetStore + operation-specific writers` 已承担 VaultService / WritebackService 的当前实现；
 - finance cache builder 已承担特定领域 IndexService；
 - `personal-agent` 已承担 AgentRuntime 和 Agent Application；
-- ReviewService 已承担投资场景的持久化 scheduled run；
+- ReviewService 已承担投资场景的已确认任务执行、持久化恢复与低成本监控；
 - 其他服务仍是目标边界，不应在文档中标记为已实现。
 
 ## 18. 架构验收标准

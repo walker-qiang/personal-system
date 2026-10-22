@@ -1,13 +1,13 @@
 %%{init: {"theme": "base", "flowchart": {"curve": "basis", "htmlLabels": true, "nodeSpacing": 30, "rankSpacing": 44}, "themeVariables": {"fontFamily": "Arial, PingFang SC, sans-serif", "lineColor": "#64748b", "textColor": "#172033"}}}%%
 flowchart TB
     USER["当前登录用户"]:::person --> MAC["筋斗云 macOS App<br/>SwiftUI client"]:::client
-    SUP["launchd supervisor<br/>持续管理 API 与 Agent"]:::runtime
+    SUP["App-owned supervisor<br/>随 App 启停 API 与 Agent"]:::runtime
 
     subgraph POS["personal-os 进程 :7001"]
         direction LR
         API["Go HTTP API<br/>Router / handlers"]:::os
         DOMAIN["Finance / Investment / Today<br/>确定性领域编排"]:::os
-        REVIEW["ReviewService<br/>调度、恢复、退避"]:::os
+        REVIEW["ReviewService<br/>主动 V3 任务、恢复、提示"]:::os
         AGENTGW["Agent Gateway<br/>JWT + HTTP/SSE"]:::os
         WRITES["Operation-specific writers<br/>AssetStore"]:::os
         MARKET["Market adapters<br/>WeStock runtime"]:::os
@@ -43,7 +43,7 @@ flowchart TB
     API --> REVIEW
     DOMAIN --> MARKET
     DOMAIN --> WRITES
-    REVIEW -->|"deep research"| AGENTGW
+    REVIEW --> AGENTGW
     REVIEW -->|"研究结果持久化"| WRITES
     AGENTGW -->|"JWT + HTTP/SSE"| HTTP
 
@@ -66,6 +66,7 @@ flowchart TB
     APP -->|"TraceLogger / OTel"| TRACE
     MARKET --> WESTOCK
 
+    MAC -.->|"托管生命周期"| SUP
     SUP -.->|"启动与健康检查"| API
     SUP -.->|"启动与健康检查"| HTTP
 

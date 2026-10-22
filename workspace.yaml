@@ -1,5 +1,5 @@
 schema_version: 1
-# 双机实际路径不同：本机 /Users/liqiang/code/personal-system；另一台 /Users/qiang.lilq/personal-system
+# 双机实际路径不同：/Users/liqiang/code/personal-system 与 /Users/qiang.lilq/personal-system
 root: /Users/qiang.lilq/personal-system
 policy:
   top_level_git_role: workspace-governance
@@ -14,7 +14,7 @@ projects:
     completion: usable
     long_term: true
     role: workspace governance repo for docs, rules, progress, migration records, and project registry
-    next: keep project progress and workspace registry current; add remote only when needed
+    next: 维护分机器的项目进度、问题台账和验证证据；remote 已配置
   - name: personal-assets
     path: personal-assets
     git: independent
@@ -31,8 +31,8 @@ projects:
     completion: usable
     long_term: true
     role: finance and investment operating app and product/API entrypoint for the independent Agent
-    scope: finance snapshots, investment research data, watchlists, fund pool, cache/status checks, Agent HTTP/SSE proxy
-    next: observe automated investment reviews and refine task/message quality
+    scope: finance snapshots, manual-first stock/fund V3 research, watchlists, fund pool, cache/status checks, Agent HTTP/SSE proxy
+    next: 按授权范围、资料权限和预算完成真实 V3 连续复查；正常使用由 App 托管 API/Agent 生命周期
   - name: personal-agent
     path: personal-agent
     git: independent
@@ -41,7 +41,7 @@ projects:
     long_term: true
     role: independent Python Agent Runtime and chat/tool service; personal-os consumes it over HTTP/SSE
     scope: model/tool loop, Runtime operations, approvals, sessions, traces, and Agent application workflows
-    next: continue provider/recovery hardening while keeping all durable writes behind personal-os
+    next: 验证引用修复在真实 V3 复查中的效果与成本；所有 durable write 继续经过 personal-os
   - name: personal-tools
     path: personal-tools
     git: independent
@@ -50,7 +50,7 @@ projects:
     long_term: true
     current_path: /Users/qiang.lilq/personal-system/personal-tools  # 双机路径不同，另一台为 /Users/liqiang/code/personal-system/personal-tools
     role: reusable personal tool repo; current inventory is the weixin-clip Chrome extension and workspace-git-delivery Codex skill
-    next: finish real-page acceptance for weixin-clip and keep the workspace-git-delivery global Codex symlink aligned with its source
+    next: 统一 weixin-clip 真实页面验收记录并按需补本机验收；保持全局 Codex skill 符号链接指向源码
 migration_sources:
   - name: obsidian-wiki
     current_path: not_found_in_current_workspace_snapshot (historical obsidian-wiki references remain in docs and migrated facts)

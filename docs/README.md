@@ -20,6 +20,15 @@
 
 ## 子系统设计
 
+当前投研主线与本轮验证：
+
+- [V3 稳定性验证与工作区状态收口](plans/2026-10-22-v3-stability-and-workspace-status.md)
+- [股票与基金统一 V3](../personal-os/docs/plans/2026-10-18-investment-research-v3-design.md)
+- [V3 研究有效性优化](../personal-os/docs/plans/2026-10-18-research-quality-design.md)
+- [V3 引用校验定向修复](../personal-agent/docs/plans/2026-10-18-research-reference-repair.md)
+
+以下为已实施基础设计及历史追溯入口：
+
 1. [标的优先的投研信息架构设计](archive/plans/2026-08-23-target-centric-investment-information-architecture-design.md)
 2. [研究卡标的目录迁移 Dry-run](archive/plans/2026-08-23-research-card-target-migration-dry-run.md)
 3. [personal-agent 系统架构](../personal-agent/docs/architecture.md)

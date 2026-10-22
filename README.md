@@ -16,7 +16,7 @@
 ## 当前子项目
 
 - [personal-assets](personal-assets/)：长期数据与知识资产仓，独立 Git repo。
-- [personal-os](personal-os/)：投资与个人助理工作台，包含持久化自动投研后台，独立 Git repo。
+- [personal-os](personal-os/)：投资与个人助理工作台，股票和基金统一使用主动触发的 V3 研究，独立 Git repo。
 - [personal-agent](personal-agent/)：独立 Python Agent Runtime 和应用服务，独立 Git repo。
 - [personal-tools](personal-tools/)：当前包含 `weixin-clip` Chrome 剪藏扩展和 `workspace-git-delivery` Codex Skill，独立 Git repo。
 
@@ -34,6 +34,7 @@
 - [Finance Fact Model V1](docs/finance-fact-model-v1.md)
 - [投研质量闸门进展](docs/research-quality-gate-progress.md)
 - [已知问题清单](docs/known-issues.md)
+- [V3 稳定性验证与工作区状态收口](docs/plans/2026-10-22-v3-stability-and-workspace-status.md)
 - [历史文档归档](docs/archive/README.md)
 
 V1 实现边界以 [personal-os/docs/migration-boundary.md](personal-os/docs/migration-boundary.md) 为准。
