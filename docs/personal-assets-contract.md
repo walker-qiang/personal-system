@@ -133,6 +133,8 @@ python3 92-系统/scripts/validate_vault_structure.py
   标的/
     <target_id>/
       profile.yaml
+      sources/
+      evidence/
       reports/
       research/
       return-analysis/
@@ -143,14 +145,18 @@ python3 92-系统/scripts/validate_vault_structure.py
   同业/
   基金池/
   复盘/
-  90-模板/
+  模板/
 ```
 
 规则：
 
 - `target_id` 使用规范化市场代码或注册表稳定 ID，不使用名称。
-- profile、官方报告、标的研究卡、收益分析快照、标的估值和事件进入标的目录。
+- profile、来源快照、证据记录、官方报告、标的研究卡、收益分析快照、标的估值和事件进入标的目录。
+- 标的文件和子目录按需创建，不预建空结构。历史研究卡或已固定收益分析可以独立归档，`profile.yaml` 不是归档前置条件；记录自身须保留 `subject` 或 `target` 身份，需要 profile 时再由对应受控流程核验后生成，不补占位事实。
+- `sources/` 保存已核验官方文档的来源快照，包括抓取正文、URL、内容 hash、获取时间和用途权限；`evidence/` 保存带来源、版本、事实引用和核验状态的证据记录，不把研究解释直接当作事实。
+- 来源快照不等于财务事实已逐项对账；官方财务事实的对账状态仍以 `reports/` 等对应记录为准。来源与证据的同步和外部模型使用范围遵守各记录的用途权限。
 - 观察池、同业比较、组合复盘、基金目录和模板保留在外层。
+- 投研专用模板的权威目录是 `13-财富/投研/模板/`；顶层 `90-模板/` 只保存 Vault 级通用模板，不建立投研模板的并行副本。
 - 全局列表、搜索、时间线和反向引用是可重建投影，不通过复制 durable 文件实现。
 - 同一内容只能有一个权威文件；迁移期间允许读新旧路径，但新写入只进入标的目录。
 - 收益分析的全部计算历史默认保存在本地 SQLite；只有固定、引用或确认的记录进入 `return-analysis/`。
@@ -159,7 +165,7 @@ python3 92-系统/scripts/validate_vault_structure.py
 - 当前按日期保存的多标的估值快照在确定新的权威模型前保持原状，不与标的 `valuation/` 双写。
 
 详细设计见
-[`2026-08-23-target-centric-investment-information-architecture-design.md`](plans/2026-08-23-target-centric-investment-information-architecture-design.md)。
+[`2026-08-23-target-centric-investment-information-architecture-design.md`](archive/plans/2026-08-23-target-centric-investment-information-architecture-design.md)。
 
 ## 隐私分层
 

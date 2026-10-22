@@ -24,7 +24,7 @@
 - **一键联调**：`bash personal-agent/scripts/e2e-app.sh`（拉起两个服务 + 黑盒断言），检查逻辑在 `scripts/e2e_app_check.py`。
   它的 `E2E_ASSETS_PATH` 默认 `/private/tmp/e2e-assets`（无 remote 副本），可用 `E2E_ASSETS_PATH` 覆盖。
 - **官方启动器是 `personal-os/tools/dev`**（同时托管 API + agent，API_BIN 在 `/private/tmp/personal-os-dev/personal-os-api`）：
-  1. **必须先有 `personal-os/.env`**，否则 `start_api` 里无条件的 `source "$ENV_FILE"` 直接失败、API 起不来。仓库已于 2026-10-11（`0c11c1a`）加入双机 `.env.example`，先 `cp .env.example .env` 再启动。
+  1. **必须先有 `personal-os/.env`**，否则 `start_api` 里无条件的 `source "$ENV_FILE"` 直接失败、API 起不来。仓库已于 2026-10-11（`0c11c1a`）加入双机 `.env.example`，先 `cp .env.example .env` 再启动（2026-10-12 起仓库已提供）。
   2. 从 WorkBuddy 会话里执行 `./tools/dev`（launchd 模式）会 **`launchctl submit` 返回 rc=1 静默失败**，
      进程还会随命令结束被杀；可行做法是 `./tools/dev --foreground` 配 `run_in_background=true`。
      想要 launchd 托管需用户在自己的 Terminal 里执行。
@@ -59,6 +59,15 @@
   每取一个就 `git update-ref refs/fetch/progress <sha>`（**不要放 `refs/heads/*`**，否则 `git push --all` 会把这个临时分支推上去），
   再配短超时（150-180s）+3 次重试+多轮棘轮 → 实测 ~6 秒/提交。
 - 收尾清理：`git gc` 前先看 git 自己的 `warning: garbage found: .git/objects/pack/tmp_pack_*`，被杀掉的 fetch 会留下大量残片（本次清掉 421MB）。
+
+## 协作与工具使用的硬约束
+- ⚠️ **并行子代理别超过 2-3 个，重活别甩给子代理**：2026-10-12 晚并行 3 个下载代理，其中 2 个各跑 30-60 分钟后
+  撞 **429 额度耗尽**失败（白跑，还得主代理用 curl 收尾）。curl 批量下载这类重活优先主代理自己做，
+  或拆小分批；真要并行就减数量、留额度余量。
+- 常用免费下载镜像（投资文献，2026-10 实测可用）：`efinance.org.cn/cn/fm/`（Markowitz52、Fama-French 1992 等）、
+  `web.archive.org`（哥伦比亚 Buffett1984.pdf、e-m-h.org 的 Fama70.pdf）、`nber.org/papers/wXXXX.pdf`（NBER 工作论文免费）、
+  伯克希尔股东信（`berkshirehathaway.com/letters/letters.html`，注意 Sucuri 返回 brotli 需解码、1998-2003 的 html 只是跳转存根）、
+  Oaktree 备忘录（PDF 公开直下，但网页易误抓日文译文版）。
 
 ## personal-system 架构要点（跨会话复用）
 - ⚠️ **UI 入口只有 macOS App（`/Applications/筋斗云.app`，连 127.0.0.1:7001），没有 Web App**：
